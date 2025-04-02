@@ -54,7 +54,7 @@ func RestartNginx() (string, error) {
 }
 
 
-func CreateNewConfig() (string, error) {
+func CreateAndEnableNewConfig() (string, error) {
     return "", nil
 }
 
@@ -62,7 +62,7 @@ func CreateNewConfig() (string, error) {
 func BackupConfig(FilePath string) (string, error) {
     srcFile, err := os.Open(FilePath)
     if err != nil {
-        return "", fmt.Errorf("failed to open file: %w", err)
+        return "", fmt.Errorf("failed to open file: %v", err)
     }
     defer srcFile.Close()
 
@@ -72,16 +72,16 @@ func BackupConfig(FilePath string) (string, error) {
 
     dstFile, err := os.Create(backupPath)
     if err != nil {
-        return "", fmt.Errorf("failed to create backup file: %w", err)
+        return "", fmt.Errorf("failed to create backup file: %v", err)
     }
     defer dstFile.Close()
 
     if _, err := io.Copy(dstFile, srcFile); err != nil {
-        return "", fmt.Errorf("failed to copy data: %w", err)
+        return "", fmt.Errorf("failed to copy data: %v", err)
     }
 
     if err := dstFile.Sync(); err != nil {
-        return "", fmt.Errorf("failed to sync backup file: %w", err)
+        return "", fmt.Errorf("failed to sync backup file: %v", err)
     }
 
     return fmt.Sprintf("backup is created successfully at: %s", backupPath), nil
@@ -97,51 +97,52 @@ func RollbackChanges(originalFilePath string) (string, error) {
     }
     backupFile, err := os.Open(backupPath)
     if err != nil {
-        return "", fmt.Errorf("failed to open backup file: %w", err)
+        return "", fmt.Errorf("failed to open backup file: %v", err)
     }
     defer backupFile.Close()
 
     originalFile, err := os.Create(originalFilePath)
     if err != nil {
-        return "", fmt.Errorf("failed to open original file for writing: %w", err)
+        return "", fmt.Errorf("failed to open original file for writing: %v", err)
     }
     defer originalFile.Close()
 
     if _, err := io.Copy(originalFile, backupFile); err != nil {
-        return "", fmt.Errorf("failed to copy backup to original file: %w", err)
+        return "", fmt.Errorf("failed to copy backup to original file: %v", err)
     }
     if err := originalFile.Sync(); err != nil {
-        return "", fmt.Errorf("failed to sync original file: %w", err)
+        return "", fmt.Errorf("failed to sync original file: %v", err)
     }
     if err := os.Remove(backupPath); err != nil {
-        return "", fmt.Errorf("failed to remove backup file: %w", err)
+        return "", fmt.Errorf("failed to remove backup file: %v", err)
     }
     return fmt.Sprintf("rollback is successful at: %v", originalFilePath), nil
 }
 
-func AddSite() (string, error) {
-    return "", nil
-}
+// func AddSite() (string, error) {
+//     return "", nil
+// }
 
-func RemoveSite() (string, error) {
-    return "", nil
-}
+// func RemoveSite() (string, error) {
+//     return "", nil
+// }
 
-// Advanced Feature
-func UpdateSite() (string, error) {
-    return "", nil
-}
-// Advanced Feature
+// // Advanced Feature
+// func UpdateSite() (string, error) {
+//     return "", nil
+// }
+// // Advanced Feature
 
-func EnableModule() (string, error) {
-    return "", nil
-}
+// func EnableModule() (string, error) {
+//     return "", nil
+// }
 
-func DisableModule() (string, error) {
-    return "", nil
-}
+// func DisableModule() (string, error) {
+//     return "", nil
+// }
 
 // Composite function that might validate, backup, apply changes, and then reload nginx, making it easier for users to perform all steps with a single call.
+//Or CheckAll()
 func RunFullCycle() (string, error) {
     return "", nil
 }

@@ -95,3 +95,11 @@ func GenerateDefaultEmailConfig(env_filePath string) (error) {
 		return nil
 	}
 }
+
+func GlobalRateLimiting() () {
+
+}
+
+func GlobalServer() () {
+
+}
