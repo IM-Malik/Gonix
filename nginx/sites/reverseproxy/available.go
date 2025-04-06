@@ -7,12 +7,13 @@ import (
 	"strings"
 	"text/template"
 	"github.com/IM-Malik/Gonix/nginx/sites"
+	"github.com/IM-Malik/Gonix/nginx"
 )
 
 // Main Functions
 // Or AddConfigFile
 func AddSite(directoryPath string, domainName string, portNumber int, proxyPass string, urlPath string, certPath string, keyPath string, enableSSL bool) (string, error) {
-    file, err := os.Create(directoryPath + domainName + ".conf")
+    file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
 	}
@@ -25,12 +26,13 @@ func AddSite(directoryPath string, domainName string, portNumber int, proxyPass 
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 // Or RemoveConfigFile
-func RemoveSite(directoryPath string, domainName string) (string, error) {
-    err := os.Remove(directoryPath + domainName + ".conf")
-    if err != nil {
-        return "", fmt.Errorf("failed to remove the config file: %v", err)
-    }
-	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
+func RemoveSite(directoryPath string, domainName string) (string, error) {   
+    return nginx.RemoveSite(directoryPath, domainName)
+//     err := os.Remove(directoryPath + domainName + ".conf")
+//     if err != nil {
+//         return "", fmt.Errorf("failed to remove the config file: %v", err)
+//     }
+// 	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
 }
 
 // Advanced Feature
@@ -50,12 +52,12 @@ func AddServer(directoryPath string, domainName string, portNumber int, proxyPas
 		return "", fmt.Errorf("failed to open config file: %v", err)
 	}
 	defer file.Close()
-    cfgVars := sites.NewConfig()
+    cfgVars := sites.NewRevConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.Domain = domainName
     cfgVars.ListenPort = portNumber
-    cfgVars.RootDir = "/var/www/html"
-    cfgVars.IndexFiles = "index.html"
+    // cfgVars.RootDir = "/var/www/html"
+    // cfgVars.IndexFiles = "index.html"
     cfgVars.ProxyPass = proxyPass
     cfgVars.EnableSSL = enableSSL
     cfgVars.SSLCertPath = certPath
@@ -68,8 +70,8 @@ func AddServer(directoryPath string, domainName string, portNumber int, proxyPas
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("server template execution failed: %w", err)
         }
-        tmpl = template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_REVERSEPROXY_BLOCK_TMPL))
-        if err := tmpl.Execute(file, cfgVars); err != nil {
+        tmpl2 := template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_REVERSEPROXY_BLOCK_TMPL))
+        if err := tmpl2.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("location template execution failed: %w", err)
         }
         file.WriteString("}\n")
@@ -110,7 +112,7 @@ func AddLocation(directoryPath string, domainName string, proxyPass string, urlP
 		return "false4", err
 	}
 
-    cfgVars := sites.NewConfig()
+    cfgVars := sites.NewRevConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.ProxyPass = proxyPass
     cfgVars.URLPath = urlPath
@@ -127,31 +129,31 @@ func AddLocation(directoryPath string, domainName string, proxyPass string, urlP
     return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
-func AddUpstream(directoryPath string, domainName string, upstreamName string, serverIP string, portNumber int) (string, error) {
-    file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return "", fmt.Errorf("failed to open config file: %v", err)
-	}
-	defer file.Close()
+// func AddUpstream(directoryPath string, domainName string, upstreamName string, serverIP string, portNumber int) (string, error) {
+//     file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to open config file: %v", err)
+// 	}
+// 	defer file.Close()
 
-    cfgVars := sites.NewUpstream()
-    cfgVars.ConfigPath = directoryPath
-    cfgVars.Name = domainName
-    cfgVars.ServerIP = serverIP
-    cfgVars.PortNumber = portNumber
+//     cfgVars := sites.NewUpstream()
+//     cfgVars.ConfigPath = directoryPath
+//     cfgVars.Name = domainName
+//     cfgVars.ServerIP = serverIP
+//     cfgVars.PortNumber = portNumber
 
-    status, err := validateConfigUpstream(cfgVars)
-    if status {
-        tmpl := template.Must(template.New("upstreamBlkTmpl").Parse(sites.UPSTREAM_BLOCK_TMPL))
-        if err := tmpl.Execute(file, cfgVars); err != nil {
-            return "", fmt.Errorf("upstream template execution failed: %w", err)
-        }
-        return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domainName + ".conf"), nil
-    }
-    return "", fmt.Errorf("failed to validate config file: %v", err)
-}
+//     status, err := validateConfigUpstream(cfgVars)
+//     if status {
+//         tmpl := template.Must(template.New("upstreamBlkTmpl").Parse(sites.UPSTREAM_BLOCK_TMPL))
+//         if err := tmpl.Execute(file, cfgVars); err != nil {
+//             return "", fmt.Errorf("upstream template execution failed: %w", err)
+//         }
+//         return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domainName + ".conf"), nil
+//     }
+//     return "", fmt.Errorf("failed to validate config file: %v", err)
+// }
 
-func validateConfigServer(cfg *sites.Config) (bool, error) {
+func validateConfigServer(cfg *sites.RevConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }
@@ -161,7 +163,7 @@ func validateConfigServer(cfg *sites.Config) (bool, error) {
     if cfg.ListenPort <= 0 || cfg.ListenPort > 65535 {
         return false, fmt.Errorf("port number needs to be between 1-65535")
     }
-    if cfg.ProxyPass == "" && cfg.RootDir == "" {
+    if cfg.ProxyPass == "" /*&& cfg.RootDir == ""*/ {
         return false, fmt.Errorf("must specify either ProxyPass or RootDir")
     }
     if cfg.EnableSSL && cfg.ListenPort == 80 {
@@ -176,31 +178,31 @@ func validateConfigServer(cfg *sites.Config) (bool, error) {
     return true, nil
 }
 
-func validateConfigLocation(cfg *sites.Config) (bool, error) {
+func validateConfigLocation(cfg *sites.RevConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }
-    if cfg.ProxyPass == "" && cfg.RootDir == "" {
-        return false, fmt.Errorf("must specify either ProxyPass or RootDir")
-    }
+    // if cfg.ProxyPass == "" && cfg.RootDir == "" {
+    //     return false, fmt.Errorf("must specify either ProxyPass or RootDir")
+    // }
     if cfg.URLPath != "" && cfg.ProxyPass == "" {
         return false, fmt.Errorf("must specify ProxyPass")
     }
     return true, nil
 }
 
-func validateConfigUpstream(cfg *sites.Upstream) (bool, error) {
-    if cfg.ConfigPath == "" {
-        return false, fmt.Errorf("config file path is not set")
-    }
-    if cfg.Name == ""{
-        return false, fmt.Errorf("must specify an upstream name")
-    }
-    if cfg.ServerIP == "" {
-        return false, fmt.Errorf("must specify a server IP")
-    }
-    if cfg.PortNumber == 0 {
-        return false, fmt.Errorf("port number needs to be between 1-65535")
-    }
-    return true, nil
-}
+// func validateConfigUpstream(cfg *sites.Upstream) (bool, error) {
+//     if cfg.ConfigPath == "" {
+//         return false, fmt.Errorf("config file path is not set")
+//     }
+//     if cfg.Name == ""{
+//         return false, fmt.Errorf("must specify an upstream name")
+//     }
+//     if cfg.ServerIP == "" {
+//         return false, fmt.Errorf("must specify a server IP")
+//     }
+//     if cfg.PortNumber == 0 {
+//         return false, fmt.Errorf("port number needs to be between 1-65535")
+//     }
+//     return true, nil
+// }

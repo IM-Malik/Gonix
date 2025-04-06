@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 	"text/template"
-
 	"github.com/IM-Malik/Gonix/nginx/sites"
+    "github.com/IM-Malik/Gonix/nginx"
 )
 
 func AddSite(directoryPath string, domainName string, portNumber int, urlPath string, staticContentPath string, staticContentFileName string) (string, error) {
-	file, err := os.Create(directoryPath + domainName + ".conf")
+	file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
 	}
@@ -22,8 +22,13 @@ func AddSite(directoryPath string, domainName string, portNumber int, urlPath st
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 
-func RemoveSite() (string, error) {
-    return "", nil
+func RemoveSite(directoryPath string, domainName string) (string, error) {
+    return nginx.RemoveSite(directoryPath, domainName)
+//     err := os.Remove(directoryPath + domainName + ".conf")
+//     if err != nil {
+//         return "", fmt.Errorf("failed to remove the config file: %v", err)
+//     }
+// 	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
 }
 
 // Advanced Feature
@@ -41,7 +46,7 @@ func AddServer(directoryPath string, domainName string, portNumber int) (string,
     }
     defer file.Close()
 
-    cfgVars := sites.NewConfig()
+    cfgVars := sites.NewWebConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.Domain = domainName
     cfgVars.ListenPort = portNumber
@@ -52,8 +57,8 @@ func AddServer(directoryPath string, domainName string, portNumber int) (string,
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("server template execution failed: %w", err)
         }
-        tmpl = template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_WEBSERVER_BLOCK_TMPL))
-        if err := tmpl.Execute(file, cfgVars); err != nil {
+        tmpl2 := template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_WEBSERVER_BLOCK_TMPL))
+        if err := tmpl2.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("location template execution failed: %w", err)
         }
         file.WriteString("}\n")
@@ -62,7 +67,7 @@ func AddServer(directoryPath string, domainName string, portNumber int) (string,
     return "", fmt.Errorf("failed to validate web server config file: %v", err)
 }
 
-func validateConfigServer(cfg *sites.Config) (bool, error) {
+func validateConfigServer(cfg *sites.WebConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }

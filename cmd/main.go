@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	// "github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	"github.com/IM-Malik/Gonix/nginx/sites/webserver"
 )
 
 func main() {
@@ -100,7 +101,11 @@ func main() {
 	// fmt.Println(output)
 	// fmt.Println(err)
 	
-	output, err := reverseproxy.AddUpstream("/etc/nginx/sites-available/", "malik.com", "test", "127.0.0.1", 9086)
+	// output, err = reverseproxy.AddUpstream("/etc/nginx/sites-available/", "malik.com", "test", "127.0.0.1", 9086)
+	// fmt.Println(output)
+	// fmt.Println(err)
+
+	output, err := webserver.AddSite("/etc/nginx/sites-available/", "malik.com", 80, "/api", "/usr/share/nginx/html", "index.html index.htm")
 	fmt.Println(output)
 	fmt.Println(err)
 	
