@@ -2,13 +2,13 @@
 package main
 
 import (
-	"github.com/IM-Malik/Gonix/nginx"
-	// "github.com/IM-Malik/Gonix/nginx/config"
-	"fmt"
+	// "github.com/IM-Malik/Gonix/nginx"
+	"github.com/IM-Malik/Gonix/nginx/config"
+	// "fmt"
 	"log"
 
 	// "github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
-	"github.com/IM-Malik/Gonix/nginx/sites/webserver"
+	// "github.com/IM-Malik/Gonix/nginx/sites/webserver"
 )
 
 func main() {
@@ -105,14 +105,19 @@ func main() {
 	// fmt.Println(output)
 	// fmt.Println(err)
 
-	output, err := webserver.AddSite("/etc/nginx/sites-available/", "malik.com", 80, "/api", "/usr/share/nginx/html", "index.html index.htm")
-	fmt.Println(output)
-	fmt.Println(err)
+	// output, err := webserver.AddSite("/etc/nginx/sites-available/", "malik.com", 80, "/api", "/usr/share/nginx/html", "index.html index.htm")
+	// fmt.Println(output)
+	// fmt.Println(err)
 	
-	output, err = nginx.TestNginx()
+	// output, err = nginx.TestNginx()
+	// if err != nil {
+	// 	log.Println(err)
+	// } else {
+	// 	log.Print(output)
+	// }
+	k, err := config.GenerateDefaultStreamConfig("/etc/nginx/nginx.conf", "/etc/nginx/sites-available/", "malik.com", "127.0.0.1", 4598)
 	if err != nil {
 		log.Println(err)
-	} else {
-		log.Print(output)
 	}
+	log.Println(k)
 }

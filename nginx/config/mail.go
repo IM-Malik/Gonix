@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// just finished with stream and tested it. mail is not tested yet
 func GenerateDefaultEmailConfig(env_filePath string) error {
 	defaultEmailConfig := `mail {
       # See sample authentication script at:
