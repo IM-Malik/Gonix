@@ -4,7 +4,7 @@ type Config struct {
 	ConfigPath	string
 	Domain      string // `json:"domain"` 	// Domain name (e.g., "example.com") --> Both
 	ListenPort  int    //`json:"listen_port"` // Port to listen on (e.g., 80) --> Both
-	URLPath     string // Add this field for path customization --> Both
+	URI	        string // Add this field for path customization --> Both
 	// RootDir     string //`json:"root_dir"`	// Root directory (e.g., "/var/www/html") --> Reverse Proxy
 	// IndexFiles  string //`json:"index_files`"	// Index files (e.g., ["index.html"]) --> Reverse Proxy
 	// ProxyPass   string //`json:"proxy_pass`"	// Proxy target (e.g., "http://localhost:3000") --> Reverse Proxy
@@ -40,7 +40,7 @@ func NewRevConfig() *RevConfig {
 	return &RevConfig{
 		Config: Config{
 			ListenPort: 80,
-			URLPath:    "/",
+			URI:    "/",
 		},
 		ProxyPass: "127.0.0.1",
 		EnableSSL: false,
@@ -51,7 +51,7 @@ func NewWebConfig() *WebConfig {
 	return &WebConfig{
 		Config: Config{
 			ListenPort: 80,
-			URLPath:    "/",	
+			URI:    "/",	
 		},
 		StaticContentPath: "/usr/share/nginx/html",
 		StaticContentFileName: "index.html index.htm",
@@ -75,7 +75,7 @@ const SERVER_REVERSEPROXY_BLOCK_TMPL = `server {
     {{end}}
 `
 
-const LOCATION_REVERSEPROXY_BLOCK_TMPL = `	location {{.URLPath}} {
+const LOCATION_REVERSEPROXY_BLOCK_TMPL = `	location {{.URI}} {
 	{{- if .ProxyPass}}
 		proxy_pass			{{.ProxyPass}};
 		proxy_set_header	Host $host;

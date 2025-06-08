@@ -6,8 +6,9 @@ import (
 )
 
 // just finished with stream and tested it. mail is not tested yet
-func GenerateDefaultEmailConfig(env_filePath string) error {
+func GenerateDefaultEmailConfig(globalConfigFilePath string) error {
 	defaultEmailConfig := `mail {
+	  auth_http 127.0.0.1:9000/cgi-bin/nginxauth.cgi;
       # See sample authentication script at:
       # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
 
@@ -28,7 +29,7 @@ func GenerateDefaultEmailConfig(env_filePath string) error {
       }
 }
 `
-	file, err := os.OpenFile(env_filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	file, err := os.OpenFile(globalConfigFilePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		// log.Fatalf("failed to open the nginx.conf file: %v\n", err)
 		return fmt.Errorf("failed to open the nginx.conf file: %v", err)

@@ -3,11 +3,12 @@ package main
 
 import (
 	// "github.com/IM-Malik/Gonix/nginx"
-	"github.com/IM-Malik/Gonix/nginx/config"
+	// "fmt"
+
+	// "github.com/IM-Malik/Gonix/nginx/config"
 	// "fmt"
 	"log"
-
-	// "github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	"github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
 	// "github.com/IM-Malik/Gonix/nginx/sites/webserver"
 )
 
@@ -115,9 +116,20 @@ func main() {
 	// } else {
 	// 	log.Print(output)
 	// }
-	k, err := config.GenerateDefaultStreamConfig("/etc/nginx/nginx.conf", "/etc/nginx/sites-available/", "malik.com", "127.0.0.1", 4598)
+	// k, err := config.GenerateDefaultStreamConfig("/etc/nginx", "malik.com", "127.0.0.1", 4598)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(k)
+	// err := config.GenerateDefaultEmailConfig("/etc/nginx/nginx.conf")
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	output, err := reverseproxy.AddLocation("/etc/nginx/sites-available/", "malik.com", "http://127.0.0.1:7282", "click")
 	if err != nil {
 		log.Println(err)
+	} else {
+		log.Println(output)
 	}
-	log.Println(k)
 }
+

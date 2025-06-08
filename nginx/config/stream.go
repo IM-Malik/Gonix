@@ -23,7 +23,7 @@ func NewStream() *Stream {
 
 
 
-func GenerateDefaultStreamConfig(env_filePath string, MainDomainConfigPath string, mainDomainName string, upstreamServerIP string,  upstreamPortNumber int) (string, error) {
+func GenerateDefaultStreamConfig(globalConfigFilePath string, mainDomainName string, upstreamServerIP string,  upstreamPortNumber int) (string, error) {
 	STREAM_BLOCK_TMPL := `
 stream {
 	ssl_preread on;
@@ -39,7 +39,11 @@ stream {
 	}
 }
 	`
-	file, err := os.OpenFile(env_filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(globalConfigFilePath + "/nginx.conf", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open the nginx.conf file: %v", err)
+	}
+	defer file.Close()
 	
 	stream := NewStream()
 	stream.MainDomainName = mainDomainName
@@ -52,5 +56,5 @@ stream {
 		return "", fmt.Errorf("failed to add stream information to template: %v", err)
 	}
 
-	return fmt.Sprintf("default stream is generated successfully at: %v", env_filePath), nil
+	return fmt.Sprintf("default stream is generated successfully at: %v", globalConfigFilePath), nil
 }

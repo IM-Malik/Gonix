@@ -12,31 +12,29 @@ import (
 
 // Main Functions
 // Or AddConfigFile
-func AddSite(directoryPath string, domainName string, portNumber int, proxyPass string, urlPath string, certPath string, keyPath string, enableSSL bool) (string, error) {
-    file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_RDWR|os.O_CREATE, 0644)
+func AddSite(directoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string) (string, error) {
+    file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
+        RemoveSite(directoryPath, domain)
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
 	}
 	defer file.Close()
 
-    output, err := AddServer(directoryPath, domainName,  portNumber, proxyPass, certPath, keyPath, urlPath, enableSSL)
+    output, err := AddServer(directoryPath, domain,  listenPort, proxyPass, uri, enableSSL, certPath, keyPath)
     if err != nil {
+        RemoveSite(directoryPath, domain)
         return "", fmt.Errorf("failed to add a site: %v", err)
     }
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 // Or RemoveConfigFile
-func RemoveSite(directoryPath string, domainName string) (string, error) {   
-    return nginx.RemoveSite(directoryPath, domainName)
-//     err := os.Remove(directoryPath + domainName + ".conf")
-//     if err != nil {
-//         return "", fmt.Errorf("failed to remove the config file: %v", err)
-//     }
-// 	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
+func RemoveSite(directoryPath string, domain string) (string, error) {   
+    return nginx.RemoveSite(directoryPath, domain)
 }
 
 // Advanced Feature
 // Or UpdateConfigFile
+// Finished with mail and stream. Changed stuff in both 'available'. Start Here Next...
 func UpdateSite() (string, error) {
     return "", nil
 }
@@ -46,23 +44,23 @@ func UpdateSite() (string, error) {
 //---------------------------------------------------------------------------------------------------
 // Sub-Functions
 
-func AddServer(directoryPath string, domainName string, portNumber int, proxyPass string, certPath string, keyPath string, urlPath string, enableSSL bool) (string, error) {
-    file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
+func AddServer(directoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string) (string, error) {
+    file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to open config file: %v", err)
 	}
 	defer file.Close()
     cfgVars := sites.NewRevConfig()
     cfgVars.ConfigPath = directoryPath
-    cfgVars.Domain = domainName
-    cfgVars.ListenPort = portNumber
+    cfgVars.Domain = domain
+    cfgVars.ListenPort = listenPort
     // cfgVars.RootDir = "/var/www/html"
     // cfgVars.IndexFiles = "index.html"
     cfgVars.ProxyPass = proxyPass
     cfgVars.EnableSSL = enableSSL
     cfgVars.SSLCertPath = certPath
     cfgVars.SSLKeyPath = keyPath
-    cfgVars.URLPath = urlPath
+    cfgVars.URI = uri
 
     status, err := validateConfigServer(cfgVars)
     if status {
@@ -75,13 +73,13 @@ func AddServer(directoryPath string, domainName string, portNumber int, proxyPas
             return "", fmt.Errorf("location template execution failed: %w", err)
         }
         file.WriteString("}\n")
-        return fmt.Sprintf("creating config file with SSL is successful: %v", directoryPath + domainName + ".conf"), nil
+        return fmt.Sprintf("creating config file with SSL is successful: %v", directoryPath + domain + ".conf"), nil
     }
     return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
-func AddLocation(directoryPath string, domainName string, proxyPass string, urlPath string) (string, error) {
-    file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_RDWR, 0644)
+func AddLocation(directoryPath string, domain string, proxyPass string, uri string) (string, error) {
+    file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_RDWR, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to open config file: %v", err)
 	}
@@ -115,7 +113,7 @@ func AddLocation(directoryPath string, domainName string, proxyPass string, urlP
     cfgVars := sites.NewRevConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.ProxyPass = proxyPass
-    cfgVars.URLPath = urlPath
+    cfgVars.URI = uri
 
     status, err := validateConfigLocation(cfgVars)
     if status {
@@ -124,13 +122,13 @@ func AddLocation(directoryPath string, domainName string, proxyPass string, urlP
             return "", fmt.Errorf("server template execution failed: %w", err)
         }
         file.WriteString("}\n")
-        return fmt.Sprintf("location block is added successfully in: %v", directoryPath + domainName + ".conf"), nil
+        return fmt.Sprintf("location block is added successfully in: %v", directoryPath + domain + ".conf"), nil
     }
     return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
-// func AddUpstream(directoryPath string, domainName string, upstreamName string, serverIP string, portNumber int) (string, error) {
-//     file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
+// func AddUpstream(directoryPath string, domain string, upstreamName string, serverIP string, listenPort int) (string, error) {
+//     file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 // 	if err != nil {
 // 		return "", fmt.Errorf("failed to open config file: %v", err)
 // 	}
@@ -138,9 +136,9 @@ func AddLocation(directoryPath string, domainName string, proxyPass string, urlP
 
 //     cfgVars := sites.NewUpstream()
 //     cfgVars.ConfigPath = directoryPath
-//     cfgVars.Name = domainName
+//     cfgVars.Name = domain
 //     cfgVars.ServerIP = serverIP
-//     cfgVars.PortNumber = portNumber
+//     cfgVars.listenPort = listenPort
 
 //     status, err := validateConfigUpstream(cfgVars)
 //     if status {
@@ -148,7 +146,7 @@ func AddLocation(directoryPath string, domainName string, proxyPass string, urlP
 //         if err := tmpl.Execute(file, cfgVars); err != nil {
 //             return "", fmt.Errorf("upstream template execution failed: %w", err)
 //         }
-//         return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domainName + ".conf"), nil
+//         return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domain + ".conf"), nil
 //     }
 //     return "", fmt.Errorf("failed to validate config file: %v", err)
 // }
@@ -172,7 +170,7 @@ func validateConfigServer(cfg *sites.RevConfig) (bool, error) {
     if !cfg.EnableSSL && cfg.ListenPort == 443 {
         return false, fmt.Errorf("cannot use port number 443 without SSL enabled. (change the EnableSSL to true)")
     }
-    if cfg.URLPath != "" && cfg.ProxyPass == "" {
+    if cfg.URI != "" && cfg.ProxyPass == "" {
         return false, fmt.Errorf("must specify ProxyPass")
     }
     return true, nil
@@ -185,7 +183,7 @@ func validateConfigLocation(cfg *sites.RevConfig) (bool, error) {
     // if cfg.ProxyPass == "" && cfg.RootDir == "" {
     //     return false, fmt.Errorf("must specify either ProxyPass or RootDir")
     // }
-    if cfg.URLPath != "" && cfg.ProxyPass == "" {
+    if cfg.URI != "" && cfg.ProxyPass == "" {
         return false, fmt.Errorf("must specify ProxyPass")
     }
     return true, nil
@@ -201,7 +199,7 @@ func validateConfigLocation(cfg *sites.RevConfig) (bool, error) {
 //     if cfg.ServerIP == "" {
 //         return false, fmt.Errorf("must specify a server IP")
 //     }
-//     if cfg.PortNumber == 0 {
+//     if cfg.listenPort == 0 {
 //         return false, fmt.Errorf("port number needs to be between 1-65535")
 //     }
 //     return true, nil
