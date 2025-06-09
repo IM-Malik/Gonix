@@ -11,12 +11,14 @@ import (
 func AddSite(directoryPath string, domain string, listenPort int, uri string, staticContentPath string, staticContentFileName string) (string, error) {
 	file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
+        RemoveSite(directoryPath, domain)
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
 	}
 	defer file.Close()
 
     output, err := AddServer(directoryPath, domain,  listenPort)
     if err != nil {
+        RemoveSite(directoryPath, domain)
         return "", fmt.Errorf("failed to add a site: %v", err)
     }
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
@@ -36,6 +38,9 @@ func UpdateSite() (string, error) {
     return "", nil
 }
 
+func GetAvailableSites(availableDirectoryPath string) (error) {
+    return nginx.GetSites(availableDirectoryPath)
+}
 //---------------------------------------------------------------------------------------------------
 // Sub-Functions
 

@@ -10,8 +10,21 @@ import (
 	"path/filepath"
 )
 
-func GetGlobalConfig(env_filePath string) (string, error) {
-    content, err := ioutil.ReadFile(env_filePath)
+type AutomatorConfig struct {
+	NginxConf      string // Path to the nginx.conf file
+	SitesAvailable string // Path to the sites-available directory
+	SitesEnabled   string // Path to the sites-enabled directory
+	ModulesEnabled string // Path to the modules-enabled directory
+	BackupConfig   string // Path to the backup of modification on configurations
+}
+
+type Automator struct {
+	config AutomatorConfig
+	//logger *logger.mylogger
+}
+
+func GetGlobalConfig(globalConfigFilePath string) (string, error) {
+    content, err := ioutil.ReadFile(globalConfigFilePath)
     if err != nil {
         return "", fmt.Errorf("failed to read nginx.conf content: %v", err)
     }
@@ -53,7 +66,7 @@ func RestartNginx() (string, error) {
     return "nginx process is restarted successfully", nil
 }
 
-
+// Start Here...
 func CreateAndEnableNewConfig() (string, error) {
     return "", nil
 }
@@ -119,27 +132,11 @@ func RollbackChanges(originalFilePath string) (string, error) {
     return fmt.Sprintf("rollback is successful at: %v", originalFilePath), nil
 }
 
-// func AddSite() (string, error) {
-//     return "", nil
-// }
-
-// func RemoveSite() (string, error) {
-//     return "", nil
-// }
-
 // // Advanced Feature
 // func UpdateSite() (string, error) {
 //     return "", nil
 // }
 // // Advanced Feature
-
-// func EnableModule() (string, error) {
-//     return "", nil
-// }
-
-// func DisableModule() (string, error) {
-//     return "", nil
-// }
 
 // Composite function that might validate, backup, apply changes, and then reload nginx, making it easier for users to perform all steps with a single call.
 //Or CheckAll()
@@ -160,18 +157,7 @@ func DefaultAutomator() (string, error) {
     return "", nil
 }
 
-type AutomatorConfig struct {
-	NginxConf      string // Path to the nginx.conf file
-	SitesAvailable string // Path to the sites-available directory
-	SitesEnabled   string // Path to the sites-enabled directory
-	ModulesEnabled string // Path to the modules-enabled directory
-	BackupConfig   string // Path to the backup of modification on configurations
-}
 
-type Automator struct {
-	config AutomatorConfig
-	//logger *logger.mylogger
-}
 
 /* An example of how to use the structs
 // NewAutomator initializes an Automator with the provided configuration.

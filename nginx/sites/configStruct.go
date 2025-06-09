@@ -62,6 +62,7 @@ func NewUpstream() *Upstream {
 	return &Upstream{}
 }
 
+// at the end give the templates a look
 const SERVER_REVERSEPROXY_BLOCK_TMPL = `server {
     {{- if not .EnableSSL}}
 	listen				{{.ListenPort}};

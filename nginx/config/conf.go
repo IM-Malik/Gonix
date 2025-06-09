@@ -6,7 +6,7 @@ import (
     "fmt"
 )
 
-func GenerateDefaultGlobalConfig(env_filePath string) (error) {
+func GenerateDefaultGlobalConfig(globalConfigFilePath string) (error) {
 	defaultConfig := `user  www-data;
 worker_processes  auto;
 pid        /run/nginx.pid;
@@ -42,7 +42,7 @@ http {
 }
 `
 	// filePath := os.Getenv("NGINX_CONF_PATH")
-	file, err := os.OpenFile(env_filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	file, err := os.OpenFile(globalConfigFilePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open the nginx.conf file: %v", err)
 	}

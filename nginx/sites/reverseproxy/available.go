@@ -127,6 +127,10 @@ func AddLocation(directoryPath string, domain string, proxyPass string, uri stri
     return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
+func GetAvailableSites(availableDirectoryPath string) (error) {
+    return nginx.GetSites(availableDirectoryPath)
+}
+
 // func AddUpstream(directoryPath string, domain string, upstreamName string, serverIP string, listenPort int) (string, error) {
 //     file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 // 	if err != nil {

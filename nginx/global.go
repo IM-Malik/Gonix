@@ -32,6 +32,18 @@ func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, 
 	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domainName + ".conf" + "is successful"), nil
 }
 
+// enabled or available based on the directory path
+func GetSites(directoryPath string) (error) {
+    sites, err := os.ReadDir(directoryPath)
+    if err != nil {
+        return fmt.Errorf("failed to read the files inside the 'modules-enabled' directory: %v", err)
+    }
+    for i := range sites {
+        fmt.Println(sites[i])
+    }
+    return nil
+}
+
 func AddUpstream(directoryPath string, domainName string, upstreamName string, serverIP string, portNumber int) (string, error) {
     file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {

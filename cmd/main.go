@@ -9,6 +9,7 @@ import (
 	// "fmt"
 	"log"
 	"github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	// "github.com/IM-Malik/Gonix/nginx/modules"
 	// "github.com/IM-Malik/Gonix/nginx/sites/webserver"
 )
 
@@ -125,11 +126,29 @@ func main() {
 	// if err != nil {
 	// 	log.Println(err)
 	// }
-	output, err := reverseproxy.AddLocation("/etc/nginx/sites-available/", "malik.com", "http://127.0.0.1:7282", "click")
+	// output, err := reverseproxy.AddLocation("/etc/nginx/sites-available/", "malik.com", "http://127.0.0.1:7282", "click")
+	// if err != nil {
+	// 	log.Println(err)
+	// } else {
+	// 	log.Println(output)
+	// }
+	// output, err := modules.DisableModule("/etc/nginx/modules-enabled/", "50-mod-http-auth-pam.conf")
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(output)
+	// output, err := modules.EnableModule("/usr/share/nginx/modules-available/", "/etc/nginx/modules-enabled/", "50-mod-http-auth-pam.conf")
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(output)
+	// err := modules.GetEnabledModules("/etc/nginx/modules-enabled/")
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	err := reverseproxy.GetAvailableSites("/etc/nginx/sites-available/")
 	if err != nil {
 		log.Println(err)
-	} else {
-		log.Println(output)
 	}
 }
 

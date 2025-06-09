@@ -23,3 +23,7 @@ func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, 
 //     }
 // 	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domainName + ".conf" + "is successful"), nil
 }
+
+func GetEnabledSites(enabledDirectoryPath string) (error) {
+    return nginx.GetSites(enabledDirectoryPath)
+}

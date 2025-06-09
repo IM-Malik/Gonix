@@ -3,7 +3,7 @@ package reverseproxy
 
 import (
 	"github.com/IM-Malik/Gonix/nginx"
-// 	"fmt"
+	// "fmt"
 // 	"os"
 )
 
@@ -23,4 +23,8 @@ func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, 
 //         return "", fmt.Errorf("failed to remove the enabled config file: %v", err)
 //     }
 // 	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domainName + ".conf" + "is successful"), nil
+}
+
+func GetEnabledSites(enabledDirectoryPath string) (error) {
+	return nginx.GetSites(enabledDirectoryPath)
 }
