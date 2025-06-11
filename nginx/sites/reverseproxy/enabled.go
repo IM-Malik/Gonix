@@ -7,8 +7,8 @@ import (
 // 	"os"
 )
 
-func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domainName string) (string, error) {
-	return nginx.EnableSite(sourceDirectoryPath, destDirectoryPath, domainName)
+func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain string) (string, error) {
+	return nginx.EnableSite(sourceDirectoryPath, destDirectoryPath, domain)
 	// 	err := os.Symlink(sourceDirectoryPath + domainName + ".conf", destDirectoryPath + domainName + ".conf")
 // 	if err != nil {
 // 		return "", fmt.Errorf("failed to enable the site: %v", err)

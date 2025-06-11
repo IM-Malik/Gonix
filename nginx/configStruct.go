@@ -1,4 +1,4 @@
-package sites
+package nginx
 
 type Config struct {
 	ConfigPath	string

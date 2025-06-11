@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
-	"github.com/IM-Malik/Gonix/nginx/sites"
+	// "github.com/IM-Malik/Gonix/nginx/sites"
 	"github.com/IM-Malik/Gonix/nginx"
 )
 
@@ -35,8 +35,8 @@ func RemoveSite(directoryPath string, domain string) (string, error) {
 // Advanced Feature
 // Or UpdateConfigFile
 // Finished with mail and stream. Changed stuff in both 'available'. Start Here Next...
-func UpdateSite() (string, error) {
-    return "", nil
+func UpdateSite() (string) {
+    return ""
 }
 // REMOVE AND REPLACE BLOCK OR JUST MODIFY EXISTING BLOCKS?
 // Advanced Feature
@@ -50,7 +50,7 @@ func AddServer(directoryPath string, domain string, listenPort int, proxyPass st
 		return "", fmt.Errorf("failed to open config file: %v", err)
 	}
 	defer file.Close()
-    cfgVars := sites.NewRevConfig()
+    cfgVars := nginx.NewRevConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.Domain = domain
     cfgVars.ListenPort = listenPort
@@ -64,11 +64,11 @@ func AddServer(directoryPath string, domain string, listenPort int, proxyPass st
 
     status, err := validateConfigServer(cfgVars)
     if status {
-        tmpl := template.Must(template.New("srvBlkTmpl").Parse(sites.SERVER_REVERSEPROXY_BLOCK_TMPL))
+        tmpl := template.Must(template.New("srvBlkTmpl").Parse(nginx.SERVER_REVERSEPROXY_BLOCK_TMPL))
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("server template execution failed: %w", err)
         }
-        tmpl2 := template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_REVERSEPROXY_BLOCK_TMPL))
+        tmpl2 := template.Must(template.New("locationBlkTmpl").Parse(nginx.LOCATION_REVERSEPROXY_BLOCK_TMPL))
         if err := tmpl2.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("location template execution failed: %w", err)
         }
@@ -110,14 +110,14 @@ func AddLocation(directoryPath string, domain string, proxyPass string, uri stri
 		return "false4", err
 	}
 
-    cfgVars := sites.NewRevConfig()
+    cfgVars := nginx.NewRevConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.ProxyPass = proxyPass
     cfgVars.URI = uri
 
     status, err := validateConfigLocation(cfgVars)
     if status {
-        tmpl := template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_REVERSEPROXY_BLOCK_TMPL))
+        tmpl := template.Must(template.New("locationBlkTmpl").Parse(nginx.LOCATION_REVERSEPROXY_BLOCK_TMPL))
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("server template execution failed: %w", err)
         }
@@ -155,7 +155,7 @@ func GetAvailableSites(availableDirectoryPath string) (error) {
 //     return "", fmt.Errorf("failed to validate config file: %v", err)
 // }
 
-func validateConfigServer(cfg *sites.RevConfig) (bool, error) {
+func validateConfigServer(cfg *nginx.RevConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }
@@ -180,7 +180,7 @@ func validateConfigServer(cfg *sites.RevConfig) (bool, error) {
     return true, nil
 }
 
-func validateConfigLocation(cfg *sites.RevConfig) (bool, error) {
+func validateConfigLocation(cfg *nginx.RevConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }

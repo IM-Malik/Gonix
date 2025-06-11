@@ -8,7 +8,7 @@ import (
 	// "github.com/IM-Malik/Gonix/nginx/config"
 	// "fmt"
 	"log"
-	"github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	// "github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
 	// "github.com/IM-Malik/Gonix/nginx/modules"
 	// "github.com/IM-Malik/Gonix/nginx/sites/webserver"
 )
@@ -146,9 +146,19 @@ func main() {
 	// if err != nil {
 	// 	log.Println(err)
 	// }
-	err := reverseproxy.GetAvailableSites("/etc/nginx/sites-available/")
+	// err := reverseproxy.GetAvailableSites("/etc/nginx/sites-available/")
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	k, err := SetAllDefaults("/etc/nginx/", "/etc/nginx/sites-available/", "/etc/nginx/sites-enabled/", "/etc/nginx/modules-enabled/")
 	if err != nil {
 		log.Println(err)
 	}
+	
+	l, er := CreateAndEnableRevProxy(k, "ali.com", 4389, "docs", "/docs", false, "", "")
+	if er != nil {
+		log.Println(er)
+	}
+	log.Println(l)
 }
 

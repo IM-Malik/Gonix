@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"text/template"
-	"github.com/IM-Malik/Gonix/nginx/sites"
+	// "github.com/IM-Malik/Gonix/nginx/sites"
     "github.com/IM-Malik/Gonix/nginx"
 )
 
@@ -51,18 +51,18 @@ func AddServer(directoryPath string, domain string, listenPort int) (string, err
     }
     defer file.Close()
 
-    cfgVars := sites.NewWebConfig()
+    cfgVars := nginx.NewWebConfig()
     cfgVars.ConfigPath = directoryPath
     cfgVars.Domain = domain
     cfgVars.ListenPort = listenPort
 
     status, err := validateConfigServer(cfgVars)
     if status {
-        tmpl := template.Must(template.New("srvBlkTmpl").Parse(sites.SERVER_WEBSERVER_BLOCK_TMPL))
+        tmpl := template.Must(template.New("srvBlkTmpl").Parse(nginx.SERVER_WEBSERVER_BLOCK_TMPL))
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("server template execution failed: %w", err)
         }
-        tmpl2 := template.Must(template.New("locationBlkTmpl").Parse(sites.LOCATION_WEBSERVER_BLOCK_TMPL))
+        tmpl2 := template.Must(template.New("locationBlkTmpl").Parse(nginx.LOCATION_WEBSERVER_BLOCK_TMPL))
         if err := tmpl2.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("location template execution failed: %w", err)
         }
@@ -72,7 +72,7 @@ func AddServer(directoryPath string, domain string, listenPort int) (string, err
     return "", fmt.Errorf("failed to validate web server config file: %v", err)
 }
 
-func validateConfigServer(cfg *sites.WebConfig) (bool, error) {
+func validateConfigServer(cfg *nginx.WebConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }

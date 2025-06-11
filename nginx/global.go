@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"os"
 
-	"github.com/IM-Malik/Gonix/nginx/sites"
+	// "github.com/IM-Malik/Gonix/nginx"
 )
 
 func RemoveSite(directoryPath string, domainName string) (string, error) {
@@ -16,12 +16,12 @@ func RemoveSite(directoryPath string, domainName string) (string, error) {
 	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
 }
 
-func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domainName string) (string, error) {
-	err := os.Symlink(sourceDirectoryPath + domainName + ".conf", destDirectoryPath + domainName + ".conf")
+func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain string) (string, error) {
+	err := os.Symlink(sourceDirectoryPath + domain + ".conf", destDirectoryPath + domain + ".conf")
 	if err != nil {
 		return "", fmt.Errorf("failed to enable the site: %v", err)
 	}
-	return fmt.Sprintf("enabling the site is successful at: %v", destDirectoryPath + domainName + ".conf"), nil
+	return fmt.Sprintf("enabling the site is successful at: %v", destDirectoryPath + domain + ".conf"), nil
 }
 
 func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, error) {
@@ -51,7 +51,7 @@ func AddUpstream(directoryPath string, domainName string, upstreamName string, s
 	}
 	defer file.Close()
 
-    cfgVars := sites.NewUpstream()
+    cfgVars := NewUpstream()
     cfgVars.ConfigPath = directoryPath
     cfgVars.Name = domainName
     cfgVars.ServerIP = serverIP
@@ -59,7 +59,7 @@ func AddUpstream(directoryPath string, domainName string, upstreamName string, s
 
     status, err := validateConfigUpstream(cfgVars)
     if status {
-        tmpl := template.Must(template.New("upstreamBlkTmpl").Parse(sites.UPSTREAM_BLOCK_TMPL))
+        tmpl := template.Must(template.New("upstreamBlkTmpl").Parse(UPSTREAM_BLOCK_TMPL))
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("upstream template execution failed: %w", err)
         }
@@ -68,7 +68,7 @@ func AddUpstream(directoryPath string, domainName string, upstreamName string, s
     return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
-func validateConfigUpstream(cfg *sites.Upstream) (bool, error) {
+func validateConfigUpstream(cfg *Upstream) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }

@@ -1,5 +1,5 @@
 // High-level automation orchestration functions
-package nginx
+package main
 
 import (
 	"fmt"
@@ -8,19 +8,53 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	// "github.com/IM-Malik/Gonix/nginx/modules"
+	// "github.com/IM-Malik/Gonix/nginx/sites/webserver"
+	// "github.com/IM-Malik/Gonix/nginx/config"
+	// "github.com/IM-Malik/Gonix/nginx"
 )
 
-type AutomatorConfig struct {
+type Defaults struct {
 	NginxConf      string // Path to the nginx.conf file
 	SitesAvailable string // Path to the sites-available directory
 	SitesEnabled   string // Path to the sites-enabled directory
 	ModulesEnabled string // Path to the modules-enabled directory
-	BackupConfig   string // Path to the backup of modification on configurations
+	// BackupConfig   string // Path to the backup of modification on configurations
 }
 
-type Automator struct {
-	config AutomatorConfig
-	//logger *logger.mylogger
+func (defaults *Defaults) SetNgnixConf(nginxConfPath string) {
+    defaults.NginxConf = nginxConfPath
+}
+
+func (defaults *Defaults) SetSitesAvailable(sitesAvailablePath string) {
+    defaults.SitesAvailable = sitesAvailablePath
+}
+
+func (defaults *Defaults) SetSitesEnabled(sitesEnabledPath string) {
+    defaults.SitesEnabled = sitesEnabledPath
+}
+
+func (defaults *Defaults) SetModulesEnabled(modulesEnabledPath string) {
+    defaults.ModulesEnabled =  modulesEnabledPath
+}
+
+func (defaults Defaults) GetDefaults() *Defaults {
+    return &defaults
+}
+
+func SetAllDefaults(nginxConfPath string, sitesAvailablePath string, sitesEnabledPath string, modulesEnabledPath string) (*Defaults, error) {
+    if(nginxConfPath != "" && sitesAvailablePath != "" && sitesEnabledPath != "" && modulesEnabledPath != ""){
+        return &Defaults{
+            NginxConf: nginxConfPath,
+            SitesAvailable: sitesAvailablePath,
+            SitesEnabled: sitesEnabledPath,
+            ModulesEnabled: modulesEnabledPath,
+        }, nil
+    }
+    return nil, fmt.Errorf("one of the parameters are not set.") //(you can set any of them with 'd' for default path)
+	// Automator.config.BackupConfig = "/etc/nginx/backup-configs/"
 }
 
 func GetGlobalConfig(globalConfigFilePath string) (string, error) {
@@ -66,9 +100,18 @@ func RestartNginx() (string, error) {
     return "nginx process is restarted successfully", nil
 }
 
-// Start Here...
-func CreateAndEnableNewConfig() (string, error) {
-    return "", nil
+func CreateAndEnableRevProxy(defaults *Defaults, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string) (string, error) {
+    if(!enableSSL) {
+        _, err := reverseproxy.AddSite(defaults.SitesAvailable, domain, listenPort, proxyPass, uri, enableSSL, certPath, keyPath)
+        if err != nil {
+            return "", fmt.Errorf("the site was not created: %v", err)
+        }
+        _, err = reverseproxy.EnableSite(defaults.SitesAvailable, defaults.SitesEnabled, domain)
+        if err != nil {
+            return "", fmt.Errorf("the site was not enabled: %v", err)
+        }
+    }
+    return "the site was created and enabled successflly", nil
 }
 
 // call this from the UpdateSite function, so before any modifications the old version is saved for easy rollback (RollBackChanges) function
@@ -132,49 +175,13 @@ func RollbackChanges(originalFilePath string) (string, error) {
     return fmt.Sprintf("rollback is successful at: %v", originalFilePath), nil
 }
 
-// // Advanced Feature
-// func UpdateSite() (string, error) {
-//     return "", nil
-// }
-// // Advanced Feature
+// Start Here ...
+func UpdateSite() (string, error) {
+    return "", nil
+}
 
 // Composite function that might validate, backup, apply changes, and then reload nginx, making it easier for users to perform all steps with a single call.
 //Or CheckAll()
 func RunFullCycle() (string, error) {
     return "", nil
 }
-
-func NewAutomator() (string, error) {
-    return "", nil
-}
-
-func DefaultAutomator() (string, error) {
-	// Automator.config.NginxConf = "/etc/nginx/nginx.conf"
-	// Automator.config.SitesAvailable = "/etc/nginx/sites-available/"
-	// Automator.config.SitesEnabled = "/etc/nginx/sites-enabled/"
-	// Automator.config.ModulesEnabled = "/etc/nginx/modules-enabled/"
-	// Automator.config.BackupConfig = "/etc/nginx/backup-configs/"
-    return "", nil
-}
-
-
-
-/* An example of how to use the structs
-// NewAutomator initializes an Automator with the provided configuration.
-func NewAutomator(cfg AutomatorConfig, logger *log.Logger) *Automator {
-    // Set defaults if necessary
-    if cfg.NginxConf == "" {
-        cfg.NginxConf = "/etc/nginx/nginx.conf"
-    }
-    if cfg.SitesAvailable == "" {
-        cfg.SitesAvailable = "/etc/nginx/sites-available"
-    }
-    if cfg.SitesEnabled == "" {
-        cfg.SitesEnabled = "/etc/nginx/sites-enabled"
-    }
-    if cfg.ModulesEnabled == "" {
-        cfg.ModulesEnabled = "/etc/nginx/modules-enabled"
-    }
-    return &Automator{config: cfg, logger: logger}
-}
-*/
