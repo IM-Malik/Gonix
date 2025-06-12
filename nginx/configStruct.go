@@ -27,6 +27,7 @@ type RevConfig struct {
 	EnableSSL   bool
 	SSLCertPath string
 	SSLKeyPath  string
+	HttpOrHttps string
 }
 
 type Upstream struct {
@@ -44,6 +45,7 @@ func NewRevConfig() *RevConfig {
 		},
 		ProxyPass: "127.0.0.1",
 		EnableSSL: false,
+		HttpOrHttps: "http",
 	}
 }
 
@@ -78,7 +80,7 @@ const SERVER_REVERSEPROXY_BLOCK_TMPL = `server {
 
 const LOCATION_REVERSEPROXY_BLOCK_TMPL = `	location {{.URI}} {
 	{{- if .ProxyPass}}
-		proxy_pass			{{.ProxyPass}};
+		proxy_pass			{{.HttpOrHttps}}://{{.ProxyPass}};
 		proxy_set_header	Host $host;
 		proxy_set_header	X-Real-IP $remote_addr;
 		proxy_set_header	X-Forwarded-For $proxy_add_x_forwarded_for;

@@ -155,10 +155,39 @@ func main() {
 		log.Println(err)
 	}
 	
-	l, er := CreateAndEnableRevProxy(k, "ali.com", 4389, "docs", "/docs", false, "", "")
-	if er != nil {
-		log.Println(er)
+	// j, e := RemoveSite(k, "ali.com")
+	// if e != nil {
+	// 	log.Print(e)
+	// }
+	// log.Println(j)
+
+	// l, er := CreateAndEnableRevProxy(k, "ali.com", 80, "/docs", false, "", "", "docsUpstream", "127.0.0.1", 4319, "http")
+	// if er != nil {
+	// 	log.Println(er)
+	// }
+	// log.Println(l)
+
+	// a, e1 := BackupConfig(k, "ali.com")
+	// if e1 != nil {
+	// 	log.Println(e1)
+	// }
+	// log.Println(a)
+
+	// a, e1 := RollbackChanges(k, "ali.com")
+	// if err != nil {
+	// 	log.Println(e1)
+	// }
+	// log.Println(a)
+
+	a, err := UpdateSite(k, "ali.com", "8083", "80gd")
+	if err != nil {
+		log.Println(err)
 	}
-	log.Println(l)
+	log.Println(a)
+	res, err := TestNginx()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(res)
 }
 

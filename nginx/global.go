@@ -53,7 +53,7 @@ func AddUpstream(directoryPath string, domainName string, upstreamName string, s
 
     cfgVars := NewUpstream()
     cfgVars.ConfigPath = directoryPath
-    cfgVars.Name = domainName
+    cfgVars.Name = upstreamName
     cfgVars.ServerIP = serverIP
     cfgVars.PortNumber = portNumber
 
