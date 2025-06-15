@@ -14,6 +14,7 @@ import (
 
 	"github.com/IM-Malik/Gonix/nginx"
 	"github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
+	"github.com/IM-Malik/Gonix/nginx/sites/webserver"
 	// "github.com/IM-Malik/Gonix/nginx/modules"
 	// "github.com/IM-Malik/Gonix/nginx/sites"
 	// "github.com/IM-Malik/Gonix/nginx/config"
@@ -116,6 +117,16 @@ func CreateAndEnableRevProxy(defaults *Defaults, domain string, listenPort int, 
 	return "the site was created and enabled successflly", nil
 }
 
+func CreateAndEnableWebServer(defaults *Defaults, domain string, listenPort int, uri string, staticContentPath string, staticContentFileName string) (string, error) {
+	_, err := webserver.AddSite(defaults.SitesAvailable, domain, listenPort, uri, staticContentPath, staticContentFileName)
+	_, err1 := webserver.EnableSite(defaults.SitesAvailable, defaults.SitesEnabled, domain)
+	if err != nil || err1 != nil {
+		return "", fmt.Errorf("the web server was not created: %v", errors.Join(err, err1))
+
+	}
+	return "the site was created and enabled successflly", nil
+}
+
 func RemoveSite(defaults *Defaults, domain string) (string, error) {
 	_, err := nginx.RemoveSite(defaults.SitesAvailable, domain)
 	_, err1 := nginx.RemoveEnabledSite(defaults.SitesEnabled, domain)
@@ -125,7 +136,6 @@ func RemoveSite(defaults *Defaults, domain string) (string, error) {
 	return "the site was removed successfully", nil
 }
 
-// call this from the UpdateSite function, so before any modifications the old version is saved for easy rollback (RollBackChanges) function
 func BackupConfig(defaults *Defaults, domain string) (string, error) {
 	srcFile, err := os.Open(defaults.SitesAvailable + domain + ".conf")
 	if err != nil {
@@ -157,46 +167,39 @@ func BackupConfig(defaults *Defaults, domain string) (string, error) {
 func RollbackChanges(defaults *Defaults, domain string) (string, error) {
 	dir := filepath.Dir(defaults.SitesAvailable)
 	base := filepath.Base(domain + ".conf")
-	backupFile := filepath.Join(dir, base + ".bak")
-    oldFile := filepath.Join(dir, base)
+	backupFile := filepath.Join(dir, base+".bak")
+	oldFile := filepath.Join(dir, base)
 
 	if _, err := os.Stat(backupFile); err != nil {
-        return "", fmt.Errorf("backup file %s is not found", backupFile)
+		return "", fmt.Errorf("backup file %s is not found", backupFile)
 	}
-    if err := os.Remove(oldFile); err != nil {
-        return "", fmt.Errorf("failed to remove backup file: %v", err)
-    }
-    if err := os.Rename(backupFile, oldFile); err != nil {
-        return "", fmt.Errorf("failed to rollback changes: %v", err)
-    }
+	if err := os.Remove(oldFile); err != nil {
+		return "", fmt.Errorf("failed to remove backup file: %v", err)
+	}
+	if err := os.Rename(backupFile, oldFile); err != nil {
+		return "", fmt.Errorf("failed to rollback changes: %v", err)
+	}
 
-    return fmt.Sprintf("rollback is successful at: %v", oldFile), nil
+	return fmt.Sprintf("rollback is successful at: %v", oldFile), nil
 }
 
 func UpdateSite(defaults *Defaults, domain string, oldText string, newText string) (string, error) {
-    _, err := BackupConfig(defaults, domain)
-    if err != nil  {
-        return "", fmt.Errorf("could not create a backup site file: %v", err)
-    }
-    data, err := os.ReadFile(defaults.SitesAvailable + domain + ".conf")
-    if err != nil {
-        return "", fmt.Errorf("the site file does not exist: %v", err)
-    }
-    if strings.Count(string(data), oldText) == 0 {
-        return "", fmt.Errorf("the old text was not found in the site file")
-    }
-    updated := strings.ReplaceAll(string(data), oldText, newText)
-    err = os.WriteFile(defaults.SitesAvailable + domain + ".conf", []byte(updated), 0)    
-    if err != nil {
-        RollbackChanges(defaults, domain)
-        return "", fmt.Errorf("the site file was not written. rolling back changes: %v", err)
-    }
-    // ReloadNginx()
+	_, err := BackupConfig(defaults, domain)
+	if err != nil {
+		return "", fmt.Errorf("could not create a backup site file: %v", err)
+	}
+	data, err := os.ReadFile(defaults.SitesAvailable + domain + ".conf")
+	if err != nil {
+		return "", fmt.Errorf("the site file does not exist: %v", err)
+	}
+	if strings.Count(string(data), oldText) == 0 {
+		return "", fmt.Errorf("the old text was not found in the site file")
+	}
+	updated := strings.ReplaceAll(string(data), oldText, newText)
+	err = os.WriteFile(defaults.SitesAvailable+domain+".conf", []byte(updated), 0)
+	if err != nil {
+		RollbackChanges(defaults, domain)
+		return "", fmt.Errorf("the site file was not written. rolling back changes: %v", err)
+	}
 	return "the site file was updated successfully", nil
-}
-
-// Composite function that might validate, backup, apply changes, and then reload nginx, making it easier for users to perform all steps with a single call.
-// Or CheckAll()
-func RunFullCycle() (string, error) {
-	return "", nil
 }

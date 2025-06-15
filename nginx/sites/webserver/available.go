@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"text/template"
-	// "github.com/IM-Malik/Gonix/nginx/sites"
     "github.com/IM-Malik/Gonix/nginx"
 )
 
@@ -26,23 +25,11 @@ func AddSite(directoryPath string, domain string, listenPort int, uri string, st
 
 func RemoveSite(directoryPath string, domain string) (string, error) {
     return nginx.RemoveSite(directoryPath, domain)
-//     err := os.Remove(directoryPath + domain + ".conf")
-//     if err != nil {
-//         return "", fmt.Errorf("failed to remove the config file: %v", err)
-//     }
-// 	return fmt.Sprintf("removal of config file " + directoryPath + domain + ".conf" + " is successful"), nil
-}
-
-// Advanced Feature
-func UpdateSite() (string, error) {
-    return "", nil
 }
 
 func GetAvailableSites(availableDirectoryPath string) (error) {
     return nginx.GetSites(availableDirectoryPath)
 }
-//---------------------------------------------------------------------------------------------------
-// Sub-Functions
 
 func AddServer(directoryPath string, domain string, listenPort int) (string, error) {
     file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)

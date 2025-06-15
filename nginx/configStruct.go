@@ -2,17 +2,9 @@ package nginx
 
 type Config struct {
 	ConfigPath	string
-	Domain      string // `json:"domain"` 	// Domain name (e.g., "example.com") --> Both
-	ListenPort  int    //`json:"listen_port"` // Port to listen on (e.g., 80) --> Both
-	URI	        string // Add this field for path customization --> Both
-	// RootDir     string //`json:"root_dir"`	// Root directory (e.g., "/var/www/html") --> Reverse Proxy
-	// IndexFiles  string //`json:"index_files`"	// Index files (e.g., ["index.html"]) --> Reverse Proxy
-	// ProxyPass   string //`json:"proxy_pass`"	// Proxy target (e.g., "http://localhost:3000") --> Reverse Proxy
-	// EnableSSL   bool   // Enable SSL --> Reverse Proxy
-	// SSLCertPath string // SSL certificate path --> Reverse Proxy
-	// SSLKeyPath  string // SSL private key path --> Reverse Proxy
-	// StaticContentPath string // Use this field to serve static content --> Web Server
-	// StaticContentFileName string // Use this field to write the static content file name --> Web Server
+	Domain      string 
+	ListenPort  int    
+	URI	        string 
 }
 
 type WebConfig struct {

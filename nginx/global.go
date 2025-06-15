@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-
-	// "github.com/IM-Malik/Gonix/nginx"
 )
 
 func RemoveSite(directoryPath string, domainName string) (string, error) {
