@@ -10,6 +10,7 @@ import (
 	"log"
 	// "github.com/IM-Malik/Gonix/nginx/sites/reverseproxy"
 	// "github.com/IM-Malik/Gonix/nginx/modules"
+	"github.com/IM-Malik/Gonix/nginx/orch"
 	// "github.com/IM-Malik/Gonix/nginx/sites/webserver"
 )
 
@@ -165,7 +166,7 @@ func main() {
 	// if err != nil {
 	// 	log.Println(err)
 	// }
-	k, err := SetAllDefaults("/etc/nginx/", "/etc/nginx/sites-available/", "/etc/nginx/sites-enabled/", "/etc/nginx/modules-enabled/")
+	k, err := orch.SetAllDefaults("/etc/nginx/", "/etc/nginx/sites-available/", "/etc/nginx/sites-enabled/", "/etc/nginx/modules-enabled/")
 	if err != nil {
 		log.Println(err)
 	}
@@ -204,5 +205,7 @@ func main() {
 		log.Println(err)
 	}
 	log.Println(res)
+
+	k.SetModulesEnabled("")
 }
 

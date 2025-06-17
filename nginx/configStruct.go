@@ -55,7 +55,7 @@ func NewWebConfig() *WebConfig {
 func NewUpstream() *Upstream {
 	return &Upstream{}
 }
-
+// Make a function to change the content of the templates somehow
 // at the end give the templates a look
 const SERVER_REVERSEPROXY_BLOCK_TMPL = `server {
     {{- if not .EnableSSL}}

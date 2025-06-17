@@ -1,13 +1,29 @@
+// Package config is responsible for nginx.conf file
 package config
 
 import (
 	"log"
 	"os"
     "fmt"
+    "text/template"
+    "github.com/IM-Malik/Gonix/orch"
 )
 
-func GenerateDefaultGlobalConfig(globalConfigFilePath string) (error) {
-	defaultConfig := `user  www-data;
+// Struct Stream holds information to be inserted in the stream block template [DEFAULT_STREAM_BLOCK_TMPL]
+type Stream struct {
+	DomainName				string
+	ServerIP				string
+	PortNumber				int
+}
+
+// Function NewStream creates a new instance of the [Stream] struct
+func NewStream() *Stream {
+	return &Stream{
+	}
+}
+
+// Constant DEFAULT_GLOBAL_CONFIGURATION_TMPL holds the immutable value of the default global configuration of nginx.conf 
+const DEFAULT_GLOBAL_CONFIGURATION = `user  www-data;
 worker_processes  auto;
 pid        /run/nginx.pid;
 include    /etc/nginx/modules-enabled/*.conf;
@@ -41,14 +57,56 @@ http {
     include /etc/nginx/sites-enabled/*;
 }
 `
-	// filePath := os.Getenv("NGINX_CONF_PATH")
-	file, err := os.OpenFile(globalConfigFilePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+
+// Constant DEFAULT_EMAIL_BLOCK_TMPL holds the immutable value of the default email block of nginx.conf
+const DEFAULT_EMAIL_BLOCK = `mail {
+	  auth_http 127.0.0.1:9000/cgi-bin/nginxauth.cgi;
+      # See sample authentication script at:
+      # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+      
+      # auth_http localhost/auth.php;
+      # pop3_capabilities "TOP" "USER";
+      # imap_capabilities "IMAP4rev1" "UIDPLUS";
+      
+      server {
+        listen     localhost:110;
+              protocol   pop3;
+              proxy      on;
+      }
+
+      server {
+              listen     localhost:143;
+              protocol   imap;
+              proxy      on;
+      }
+}
+`
+// Constant DEFAULT_STREAM_BLOCK_TMPL holds the immutable dynamic template of the default stream block of nginx.conf
+const DEFAULT_STREAM_BLOCK_TMPL = `
+stream {
+    ssl_preread on;
+    map $ssl_preread_server_name $upstream {
+        {{.DomainName}}	{{.DomainName}}.conf;
+    }
+    server {
+        listen 443;
+        proxy_pass $upstream;
+    }
+    upstream {{.DomainName}}.conf {
+        server {{.ServerIP}}:{{.PortNumber}};
+    }
+}
+`
+// Function GenerateDefaultGlobalConfig generate a default nginx.conf configuration based on the template
+func GenerateDefaultGlobalConfig(defaults *orch.Defaults) (error) {
+    
+	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open the nginx.conf file: %v", err)
 	}
 	defer file.Close()
 
-	_, err = file.WriteString(defaultConfig)
+	_, err = file.WriteString(DEFAULT_GLOBAL_CONFIGURATION)
 	if err != nil {
 		return fmt.Errorf("failed to write in the nginx.conf file: %v", err)
 	} else {
@@ -57,12 +115,41 @@ http {
 	}
 }
 
+// Function GenerateDefaultEmailConfig generates a default mail block with mail servers using pop3 and imap based on the template (works but the template is not finalized)
+func GenerateDefaultEmailConfig(defaults *orch.Defaults) error {
 
+	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open the nginx.conf file: %v", err)
+	}
+	defer file.Close()
 
-func GlobalRateLimiting() () {
-
+	_, err = file.WriteString(DEFAULT_EMAIL_BLOCK)
+	if err != nil {
+		return fmt.Errorf("failed to write in the nginx.conf file: %v", err)
+	} else {
+		fmt.Printf("the email default configuration is written correctly in nginx.conf file\n")
+		return nil
+	}
 }
 
-func GlobalServer() () {
+// Function GenerateDefaultStreamConfig generates a default stream block 
+func GenerateDefaultStreamConfig(defaults *orch.Defaults, domain string, upstreamServerIP string,  upstreamPortNumber int) (string, error) {
+	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open the nginx.conf file: %v", err)
+	}
+	defer file.Close()
+	
+	stream := NewStream()
+	stream.DomainName = domain
+	stream.ServerIP = upstreamServerIP
+	stream.PortNumber = upstreamPortNumber
 
+	tmpl := template.Must(template.New("streamBlkTmpl").Parse(DEFAULT_STREAM_BLOCK_TMPL))
+	err = tmpl.Execute(file, stream)
+	if err != nil {
+		return "", fmt.Errorf("failed to add stream information to template: %v", err)
+	}
+	return fmt.Sprintf("default stream is generated successfully at: %v", defaults.NginxConf + "nginx.conf"), nil
 }
