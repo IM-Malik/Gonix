@@ -1,30 +1,25 @@
-// Creating/removing symbolic links
 package reverseproxy
 
 import (
+	"os"
 	"github.com/IM-Malik/Gonix/nginx"
-	// "fmt"
-// 	"os"
 )
 
+// Function EnableSite enables the specific available site by domain name
 func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain string) (string, error) {
 	return nginx.EnableSite(sourceDirectoryPath, destDirectoryPath, domain)
-	// 	err := os.Symlink(sourceDirectoryPath + domainName + ".conf", destDirectoryPath + domainName + ".conf")
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to enable the site: %v", err)
-// 	}
-// 	return fmt.Sprintf("enabling the site is successful at: %v", destDirectoryPath + domainName + ".conf"), nil
 }
 
+// Function RemoveEnabledSite removes the enabled site, without removing the available site
 func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, error) {
 	return nginx.RemoveEnabledSite(enabledDirectoryPath, domainName)
-// 	err := os.Remove(enabledDirectoryPath + domainName + ".conf")
-//     if err != nil {
-//         return "", fmt.Errorf("failed to remove the enabled config file: %v", err)
-//     }
-// 	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domainName + ".conf" + "is successful"), nil
 }
 
-func GetEnabledSites(enabledDirectoryPath string) (error) {
-	return nginx.GetSites(enabledDirectoryPath)
+// Function GetEnabledSites return list of all the enabled sites
+func GetEnabledSites(enabledDirectoryPath string) ([]os.DirEntry, error) {
+	sites, err := nginx.GetSites(enabledDirectoryPath)
+	if err != nil {
+		return nil, err
+	}
+	return sites, nil
 }

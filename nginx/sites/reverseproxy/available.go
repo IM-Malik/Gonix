@@ -1,4 +1,4 @@
-// Adding, deleting, and modifying site files
+// Package reverseproxy is responsible for Adding, deleting, modifying, creating/removing symbolic links in reverse proxy site files
 package reverseproxy
 
 import (
@@ -8,8 +8,9 @@ import (
 	"github.com/IM-Malik/Gonix/nginx"
 )
 
+// Function AddSite adds a complete reverse proxy site, no need for extra function calling.
 func AddSite(directoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string, httpOrhttps string) (string, error) {
-	file, err := os.OpenFile(directoryPath+domain+".conf", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		RemoveSite(directoryPath, domain)
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
@@ -24,10 +25,12 @@ func AddSite(directoryPath string, domain string, listenPort int, proxyPass stri
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 
-func RemoveSite(directoryPath string, domain string) (string, error) {
+// Function RemoveSite removes any existing site with the specefied domain name
+func RemoveSite(directoryPath, domain string) (string, error) {
 	return nginx.RemoveSite(directoryPath, domain)
 }
 
+// Function AddServer adds a server and location blocks to existing site with the specefied domain name
 func AddServer(directoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string, httpOrhttps string) (string, error) {
 	file, err := os.OpenFile(directoryPath+domain+".conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -61,10 +64,16 @@ func AddServer(directoryPath string, domain string, listenPort int, proxyPass st
 	return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
-func GetAvailableSites(availableDirectoryPath string) error {
-	return nginx.GetSites(availableDirectoryPath)
+// Function GetEnabledSites return list of all the available sites
+func GetAvailableSites(availableDirectoryPath string) ([]os.DirEntry, error) {
+	sites, err := nginx.GetSites(availableDirectoryPath)
+	if err != nil {
+		return nil, err
+	}
+	return sites, nil
 }
 
+// Function validateConfigServer checks for all the available information for reverse proxy and returns correct error message when missing
 func validateConfigServer(cfg *nginx.RevConfig) (bool, error) {
 	if cfg.ConfigPath == "" {
 		return false, fmt.Errorf("config file path is not set")

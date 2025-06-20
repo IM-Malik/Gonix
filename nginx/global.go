@@ -1,3 +1,4 @@
+// Package nginx is responsible for having functions that are shared between more than one package
 package nginx
 
 import (
@@ -6,6 +7,7 @@ import (
 	"os"
 )
 
+// Function RemoveSite removes reverseproxy/webserver available/enabled sites, based on the directory path
 func RemoveSite(directoryPath string, domainName string) (string, error) {
     err := os.Remove(directoryPath + domainName + ".conf")
     if err != nil {
@@ -14,6 +16,7 @@ func RemoveSite(directoryPath string, domainName string) (string, error) {
 	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
 }
 
+// Function EnableSite enables reverseproxy/webserver available/enabled sites, based on the directory path
 func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain string) (string, error) {
 	err := os.Symlink(sourceDirectoryPath + domain + ".conf", destDirectoryPath + domain + ".conf")
 	if err != nil {
@@ -22,6 +25,7 @@ func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain str
 	return fmt.Sprintf("enabling the site is successful at: %v", destDirectoryPath + domain + ".conf"), nil
 }
 
+// Function RemoveEnabledSite removes the enabled reverseproxy/webserver enabled sites specified by domain name 
 func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, error) {
 	err := os.Remove(enabledDirectoryPath + domainName + ".conf")
     if err != nil {
@@ -30,18 +34,16 @@ func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, 
 	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domainName + ".conf" + "is successful"), nil
 }
 
-// enabled or available based on the directory path
-func GetSites(directoryPath string) (error) {
+// Function GetSites returns a slice with all files in a directory in reverseproxy/webserver available/enabled sites, based on the directory path
+func GetSites(directoryPath string) ([]os.DirEntry, error) {
     sites, err := os.ReadDir(directoryPath)
     if err != nil {
-        return fmt.Errorf("failed to read the files inside the 'modules-enabled' directory: %v", err)
+        return nil, fmt.Errorf("failed to read the files inside the 'modules-enabled' directory: %v", err)
     }
-    for i := range sites {
-        fmt.Println(sites[i])
-    }
-    return nil
+    return sites, nil
 }
 
+// Function AddUpstream adds an upstream block to the reverseproxy/webserver available/enabled sites, based on the directory path
 func AddUpstream(directoryPath string, domainName string, upstreamName string, serverIP string, portNumber int) (string, error) {
     file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -66,6 +68,7 @@ func AddUpstream(directoryPath string, domainName string, upstreamName string, s
     return "", fmt.Errorf("failed to validate config file: %v", err)
 }
 
+// Function validateConfigUpstream checks for all the available information for upstream and returns correct error message when missing
 func validateConfigUpstream(cfg *Upstream) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")

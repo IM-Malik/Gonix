@@ -1,19 +1,26 @@
-// Package webserver is used to create and manipulate web servers in Nginx
 package webserver
 
 import (
+	"os"
+
 	"github.com/IM-Malik/Gonix/nginx"
 )
 
-// EnableSite is a function that gives the user the ability to enable an available site in Nginx
+// Function EnableSite enables the specific available site by domain name
 func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domainName string) (string, error) {
 	return nginx.EnableSite(sourceDirectoryPath, destDirectoryPath, domainName)
 }
 
+// Function RemoveEnabledSite removes the enabled site, without removing the available site
 func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, error) {
 	return nginx.RemoveEnabledSite(enabledDirectoryPath, domainName) 
 }
 
-func GetEnabledSites(enabledDirectoryPath string) (error) {
-    return nginx.GetSites(enabledDirectoryPath)
+// Function GetEnabledSites return list of all the enabled sites
+func GetEnabledSites(enabledDirectoryPath string) ([]os.DirEntry, error) {
+	sites, err := nginx.GetSites(enabledDirectoryPath)
+	if err != nil {
+		return nil, err
+	}
+    return sites, nil
 }

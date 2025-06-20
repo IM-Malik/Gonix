@@ -1,4 +1,4 @@
-// Package orch is a high-level automation functions
+// Package orch is a high-level package provide automation functions 
 package orch
 
 import (
