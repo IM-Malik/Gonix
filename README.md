@@ -115,14 +115,14 @@ func main() {
     // Add a new reverse proxy site configuration directly
     msg, err := reverseproxy.AddSite(
         "/etc/nginx/sites-available/", // Or you could use a Defaults instance
-        "example.com",
-        80,
-        "127.0.0.1:8080",
-        "/",
-        false, // EnableSSL
-        "",    // SSLCertPath
-        "",    // SSLKeyPath
-        "http",
+        "example.com",      // domain
+        80,                 // listen port
+        "127.0.0.1:8080",   // proxy_pass
+        "/",                // uri
+        false,              // enableSSL
+        "",                 // SSLCertPath
+        "",                 // SSLKeyPath
+        "http",             //httpOrhttps
     )
     if err != nil {
         fmt.Println("Error:", err)
