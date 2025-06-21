@@ -135,7 +135,7 @@ func CreateAndEnableRevProxy(defaults *Defaults, domain string, listenPort int, 
 			return "", fmt.Errorf("the reverse proxy site was not enabled due to: %v", err)
 		}
 	}
-	return "the site was created and enabled successflly", nil
+	return "the site was created and enabled successfully:" + domain, nil
 }
 
 // CreateAndEnableWebServer combine 2 functions (AddSite, EnableSite) from the webserver package to automate the new creation and enable of the Nginx configuration file

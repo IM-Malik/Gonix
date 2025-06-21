@@ -59,7 +59,7 @@ func AddServer(directoryPath string, domain string, listenPort int, proxyPass st
 		    return "", fmt.Errorf("location template execution failed: %w", err)
 		}
 		file.WriteString("}\n")
-		return fmt.Sprintf("creating config file with SSL is successful: %v", directoryPath + domain + ".conf"), nil
+		return fmt.Sprintf("creating config file is successful: %v", directoryPath + domain + ".conf"), nil
 	}
 	return "", fmt.Errorf("reverse proxy configuration validation failed: %v", err)
 }
