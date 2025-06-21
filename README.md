@@ -162,9 +162,10 @@ In this scenarion you will need to manually enable the site by creating a symbol
 ## Permissions
 
 > **NOTE:**  
-> Many operations in this library require elevated permissions to modify system files.  
-> When running code that uses this library, you should use `sudo go run ...` or run your binary as root to ensure all file and service operations succeed.  
-> If you build your program `sudo go build ...` first, remember to run the built binary with `sudo ./yourbinary`—using `sudo` only during the build step is not sufficient.
+> - Many operations in this library require elevated permissions to modify system files.  
+> - When running code that uses this library, you should use `sudo go run ...` or run your binary as root to ensure all file and service operations succeed.  
+> - If you build your program `sudo go build ...` first, remember to run the built binary with `sudo ./yourbinary`—using `sudo` only during the build step is not sufficient.
+> - After any addition, deletion, or modification of Nginx configuration files, you should call the `ReloadNginx` function. Nginx does not automatically detect configuration changes; you must explicitly reload it to apply updates.
 
 
 
