@@ -8,7 +8,7 @@ import (
     "github.com/IM-Malik/Gonix/nginx"
 )
 
-// Function AddSite adds a complete web server site, no need for extra function calling.
+// AddSite adds a complete web server site, no need for extra function calling.
 func AddSite(directoryPath string, domain string, listenPort int, uri string, staticContentPath string, staticContentFileName string) (string, error) {
 	file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
@@ -25,12 +25,12 @@ func AddSite(directoryPath string, domain string, listenPort int, uri string, st
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 
-// Function RemoveSite removes any existing site with the specefied domain name
+// RemoveSite removes any existing site with the specefied domain name
 func RemoveSite(directoryPath string, domain string) (string, error) {
     return nginx.RemoveSite(directoryPath, domain)
 }
 
-// Function AddServer adds a server and location blocks to existing site with the specefied domain name
+// AddServer adds a server and location blocks to existing site with the specefied domain name
 func AddServer(directoryPath string, domain string, listenPort int) (string, error) {
     file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
     if err != nil {
@@ -56,10 +56,10 @@ func AddServer(directoryPath string, domain string, listenPort int) (string, err
         file.WriteString("}\n")
         return fmt.Sprintf("creating web server config file is successful: %v", directoryPath + domain + ".conf"), nil
     }
-    return "", fmt.Errorf("failed to validate web server config file: %v", err)
+    return "", fmt.Errorf("web server configuration validation failed: %v", err)
 }
 
-// Function GetEnabledSites return list of all the available sites
+// GetEnabledSites return list of all the available sites
 func GetAvailableSites(availableDirectoryPath string) ([]os.DirEntry, error) {
     sites, err := nginx.GetSites(availableDirectoryPath)
     if err != nil {
@@ -68,13 +68,13 @@ func GetAvailableSites(availableDirectoryPath string) ([]os.DirEntry, error) {
     return sites, nil
 }
 
-// Function validateConfigServer checks for all the available information for web server and returns correct error message when missing
+// validateConfigServer checks for all the available information for web server and returns correct error message when missing
 func validateConfigServer(cfg *nginx.WebConfig) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")
     }
     if cfg.Domain == "" {
-        return false, fmt.Errorf("must set a domain name")
+        return false, fmt.Errorf("domain name is required")
     }
     if cfg.ListenPort == 0 {
         return false, fmt.Errorf("port number needs to be between 1-65535")

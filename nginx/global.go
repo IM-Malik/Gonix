@@ -7,16 +7,16 @@ import (
 	"os"
 )
 
-// Function RemoveSite removes reverseproxy/webserver available/enabled sites, based on the directory path
-func RemoveSite(directoryPath string, domainName string) (string, error) {
-    err := os.Remove(directoryPath + domainName + ".conf")
+// RemoveSite removes reverseproxy/webserver available/enabled sites, based on the directory path
+func RemoveSite(directoryPath string, domain string) (string, error) {
+    err := os.Remove(directoryPath + domain + ".conf")
     if err != nil {
-        return "", fmt.Errorf("failed to remove the config file: %v", err)
+        return "", fmt.Errorf("could not remove the configuration file: %v", err)
     }
-	return fmt.Sprintf("removal of config file " + directoryPath + domainName + ".conf" + " is successful"), nil
+	return fmt.Sprintf("removal of config file " + directoryPath + domain + ".conf" + " is successful"), nil
 }
 
-// Function EnableSite enables reverseproxy/webserver available/enabled sites, based on the directory path
+// EnableSite enables reverseproxy/webserver available/enabled sites, based on the directory path
 func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain string) (string, error) {
 	err := os.Symlink(sourceDirectoryPath + domain + ".conf", destDirectoryPath + domain + ".conf")
 	if err != nil {
@@ -25,27 +25,27 @@ func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain str
 	return fmt.Sprintf("enabling the site is successful at: %v", destDirectoryPath + domain + ".conf"), nil
 }
 
-// Function RemoveEnabledSite removes the enabled reverseproxy/webserver enabled sites specified by domain name 
-func RemoveEnabledSite(enabledDirectoryPath string, domainName string) (string, error) {
-	err := os.Remove(enabledDirectoryPath + domainName + ".conf")
+// RemoveEnabledSite removes the enabled reverseproxy/webserver enabled sites specified by domain name 
+func RemoveEnabledSite(enabledDirectoryPath string, domain string) (string, error) {
+	err := os.Remove(enabledDirectoryPath + domain + ".conf")
     if err != nil {
-        return "", fmt.Errorf("failed to remove the enabled config file: %v", err)
+        return "", fmt.Errorf("could not remove the enabled configuration file: %v", err)
     }
-	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domainName + ".conf" + "is successful"), nil
+	return fmt.Sprintf("removal of enabled config file " + enabledDirectoryPath + domain + ".conf" + "is successful"), nil
 }
 
-// Function GetSites returns a slice with all files in a directory in reverseproxy/webserver available/enabled sites, based on the directory path
+// GetSites returns a slice with all files in a directory in reverseproxy/webserver available/enabled sites, based on the directory path
 func GetSites(directoryPath string) ([]os.DirEntry, error) {
     sites, err := os.ReadDir(directoryPath)
     if err != nil {
-        return nil, fmt.Errorf("failed to read the files inside the 'modules-enabled' directory: %v", err)
+        return nil, fmt.Errorf("could not read files in directory %s: %v", directoryPath, err)
     }
     return sites, nil
 }
 
-// Function AddUpstream adds an upstream block to the reverseproxy/webserver available/enabled sites, based on the directory path
-func AddUpstream(directoryPath string, domainName string, upstreamName string, serverIP string, portNumber int) (string, error) {
-    file, err := os.OpenFile(directoryPath + domainName + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
+// AddUpstream adds an upstream block to the reverseproxy/webserver available/enabled sites, based on the directory path
+func AddUpstream(directoryPath string, domain string, upstreamName string, serverIP string, portNumber int) (string, error) {
+    file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to open config file: %v", err)
 	}
@@ -63,12 +63,12 @@ func AddUpstream(directoryPath string, domainName string, upstreamName string, s
         if err := tmpl.Execute(file, cfgVars); err != nil {
             return "", fmt.Errorf("upstream template execution failed: %w", err)
         }
-        return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domainName + ".conf"), nil
+        return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domain + ".conf"), nil
     }
-    return "", fmt.Errorf("failed to validate config file: %v", err)
+    return "", fmt.Errorf("configuration validation failed: %v", err)
 }
 
-// Function validateConfigUpstream checks for all the available information for upstream and returns correct error message when missing
+// validateConfigUpstream checks for all the available information for upstream and returns correct error message when missing
 func validateConfigUpstream(cfg *Upstream) (bool, error) {
     if cfg.ConfigPath == "" {
         return false, fmt.Errorf("config file path is not set")

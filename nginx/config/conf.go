@@ -9,20 +9,20 @@ import (
     "github.com/IM-Malik/Gonix/orch"
 )
 
-// Struct Stream holds information to be inserted in the stream block template [DEFAULT_STREAM_BLOCK_TMPL]
+// Stream holds information to be inserted in the stream block template [DEFAULT_STREAM_BLOCK_TMPL]
 type Stream struct {
-	DomainName				string
+	Domain				string
 	ServerIP				string
 	PortNumber				int
 }
 
-// Function NewStream creates a new instance of the [Stream] struct
+// NewStream creates a new instance of the [Stream] struct
 func NewStream() *Stream {
 	return &Stream{
 	}
 }
 
-// Constant DEFAULT_GLOBAL_CONFIGURATION_TMPL holds the immutable value of the default global configuration of nginx.conf 
+// DEFAULT_GLOBAL_CONFIGURATION_TMPL holds the immutable value of the default global configuration of nginx.conf 
 const DEFAULT_GLOBAL_CONFIGURATION = `user  www-data;
 worker_processes  auto;
 pid        /run/nginx.pid;
@@ -58,7 +58,7 @@ http {
 }
 `
 
-// Constant DEFAULT_EMAIL_BLOCK_TMPL holds the immutable value of the default email block of nginx.conf
+// DEFAULT_EMAIL_BLOCK_TMPL holds the immutable value of the default email block of nginx.conf
 const DEFAULT_EMAIL_BLOCK = `mail {
 	  auth_http 127.0.0.1:9000/cgi-bin/nginxauth.cgi;
       # See sample authentication script at:
@@ -81,23 +81,23 @@ const DEFAULT_EMAIL_BLOCK = `mail {
       }
 }
 `
-// Constant DEFAULT_STREAM_BLOCK_TMPL holds the immutable dynamic template of the default stream block of nginx.conf
+// DEFAULT_STREAM_BLOCK_TMPL holds the immutable dynamic template of the default stream block of nginx.conf
 const DEFAULT_STREAM_BLOCK_TMPL = `
 stream {
     ssl_preread on;
     map $ssl_preread_server_name $upstream {
-        {{.DomainName}}	{{.DomainName}}.conf;
+        {{.Domain}}	{{.Domain}}.conf;
     }
     server {
         listen 443;
         proxy_pass $upstream;
     }
-    upstream {{.DomainName}}.conf {
+    upstream {{.Domain}}.conf {
         server {{.ServerIP}}:{{.PortNumber}};
     }
 }
 `
-// Function GenerateDefaultGlobalConfig generate a default nginx.conf configuration based on the template
+// GenerateDefaultGlobalConfig generate a default nginx.conf configuration based on the template
 func GenerateDefaultGlobalConfig(defaults *orch.Defaults) (error) {
     
 	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
@@ -115,7 +115,7 @@ func GenerateDefaultGlobalConfig(defaults *orch.Defaults) (error) {
 	}
 }
 
-// Function GenerateDefaultEmailConfig generates a default mail block with mail servers using pop3 and imap based on the template (works but the template is not finalized)
+// GenerateDefaultEmailConfig generates a default mail block with mail servers using pop3 and imap based on the template (works but the template is not finalized)
 func GenerateDefaultEmailConfig(defaults *orch.Defaults) error {
 
 	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
@@ -133,7 +133,7 @@ func GenerateDefaultEmailConfig(defaults *orch.Defaults) error {
 	}
 }
 
-// Function GenerateDefaultStreamConfig generates a default stream block 
+// GenerateDefaultStreamConfig generates a default stream block 
 func GenerateDefaultStreamConfig(defaults *orch.Defaults, domain string, upstreamServerIP string,  upstreamPortNumber int) (string, error) {
 	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -142,7 +142,7 @@ func GenerateDefaultStreamConfig(defaults *orch.Defaults, domain string, upstrea
 	defer file.Close()
 	
 	stream := NewStream()
-	stream.DomainName = domain
+	stream.Domain = domain
 	stream.ServerIP = upstreamServerIP
 	stream.PortNumber = upstreamPortNumber
 

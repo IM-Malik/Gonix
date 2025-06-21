@@ -90,7 +90,7 @@ const SERVER_WEBSERVER_BLOCK_TMPL = `server {
 	
 `
 
-const LOCATION_WEBSERVER_BLOCK_TMPL = `	location {{.URLPath}} {
+const LOCATION_WEBSERVER_BLOCK_TMPL = `	location {{.URI}} {
 		root	{{.StaticContentPath}};
 		index	{{.StaticContentFileName}};
 	}
