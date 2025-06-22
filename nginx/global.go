@@ -3,7 +3,6 @@ package nginx
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 )
 
@@ -41,46 +40,4 @@ func GetSites(directoryPath string) ([]os.DirEntry, error) {
         return nil, fmt.Errorf("could not read files in directory %s: %v", directoryPath, err)
     }
     return sites, nil
-}
-
-// AddUpstream adds an upstream block to the reverseproxy/webserver available/enabled sites, based on the directory path
-func AddUpstream(directoryPath string, domain string, upstreamName string, serverIP string, portNumber int) (string, error) {
-    file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return "", fmt.Errorf("failed to open config file: %v", err)
-	}
-	defer file.Close()
-
-    cfgVars := NewUpstream()
-    cfgVars.ConfigPath = directoryPath
-    cfgVars.Name = upstreamName
-    cfgVars.ServerIP = serverIP
-    cfgVars.PortNumber = portNumber
-
-    status, err := validateConfigUpstream(cfgVars)
-    if status {
-        tmpl := template.Must(template.New("upstreamBlkTmpl").Parse(UPSTREAM_BLOCK_TMPL))
-        if err := tmpl.Execute(file, cfgVars); err != nil {
-            return "", fmt.Errorf("upstream template execution failed: %w", err)
-        }
-        return fmt.Sprintf("upstream block is added succesfully in: %v", directoryPath + domain + ".conf"), nil
-    }
-    return "", fmt.Errorf("configuration validation failed: %v", err)
-}
-
-// validateConfigUpstream checks for all the available information for upstream and returns correct error message when missing
-func validateConfigUpstream(cfg *Upstream) (bool, error) {
-    if cfg.ConfigPath == "" {
-        return false, fmt.Errorf("config file path is not set")
-    }
-    if cfg.Name == ""{
-        return false, fmt.Errorf("must specify an upstream name")
-    }
-    if cfg.ServerIP == "" {
-        return false, fmt.Errorf("must specify a server IP")
-    }
-    if cfg.PortNumber == 0 {
-        return false, fmt.Errorf("port number needs to be between 1-65535")
-    }
-    return true, nil
 }

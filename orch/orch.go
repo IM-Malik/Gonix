@@ -21,7 +21,7 @@ import (
 
 // Defaults holds default information about the Nginx setup in your machine
 type Defaults struct {
-	// NginxConf is the path to nginx.conf file
+	// NginxConf is the path to directory (usually /etc/nginx/)
 	NginxConf string
 	// SitesAvailable is the path to sites-available directory
 	SitesAvailable string
@@ -31,47 +31,9 @@ type Defaults struct {
 	ModulesEnabled string
 }
 
-// SetNginxConf set/reset only the NginxConf value in the defaults instance
-func (defaults *Defaults) SetNginxConf(nginxConfPath string) {
-	defaults.NginxConf = nginxConfPath
-}
-
-// SetSitesAvailable set/reset only the SitesAvailable value in the defaults instance
-func (defaults *Defaults) SetSitesAvailable(sitesAvailablePath string) {
-	defaults.SitesAvailable = sitesAvailablePath
-}
-
-// SetSitesEnabled set/reset only the SitesEnabled value in the defaults instance
-func (defaults *Defaults) SetSitesEnabled(sitesEnabledPath string) {
-	defaults.SitesEnabled = sitesEnabledPath
-}
-
-// SetModulesEnabled set/reset only the ModulesEnabled value in the defaults instance
-func (defaults *Defaults) SetModulesEnabled(modulesEnabledPath string) {
-	defaults.ModulesEnabled = modulesEnabledPath
-}
-
-// GetDefaults returns the values inside the defaults instance
-func (defaults Defaults) GetDefaults() *Defaults {
-	return &defaults
-}
-
-// SetAllDefaults set/reset all the values inside the default instance
-func (defaults *Defaults) SetAllDefaults(nginxConfPath string, sitesAvailablePath string, sitesEnabledPath string, modulesEnabledPath string) (*Defaults, error) {
-	if nginxConfPath != "" && sitesAvailablePath != "" && sitesEnabledPath != "" && modulesEnabledPath != "" {
-		return &Defaults{
-			NginxConf:      nginxConfPath,
-			SitesAvailable: sitesAvailablePath,
-			SitesEnabled:   sitesEnabledPath,
-			ModulesEnabled: modulesEnabledPath,
-		}, nil
-	}
-	return nil, fmt.Errorf("one or more of the parameters are not set")
-}
-
 // GetGlobalConfig returns the configuration inside the nginx.conf file
 func GetGlobalConfig(defaults *Defaults) (string, error) {
-	content, err := os.ReadFile(defaults.NginxConf)
+	content, err := os.ReadFile(defaults.NginxConf + "nginx.conf")
 	if err != nil {
 		return "", fmt.Errorf("unable to read nginx.conf: %v", err)
 	}
@@ -93,7 +55,7 @@ func ReloadNginx() (string, error) {
 	cmd := exec.Command("nginx", "-s", "reload")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("could not reload Nginx: %v", err)
+		return "", fmt.Errorf("could not reload Nginx: %v\nTry testing Nginx first", err)
 	}
 	return fmt.Sprintf("nginx is reloaded successfully: %v", string(output)), nil
 }
@@ -104,7 +66,7 @@ func RestartNginx() (string, error) {
 	cmd := exec.Command("systemctl", "restart", "nginx")
 	_, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("could not restart the Nginx service: %v", err)
+		return "", fmt.Errorf("could not restart the Nginx service: %v\nTry testing Nginx first", err)
 	}
 	return "nginx process is restarted successfully", nil
 }
@@ -114,9 +76,9 @@ func TestNginx() (string, error) {
 	cmd := exec.Command("nginx", "-t")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("could not reload Nginx: %v\nOutput: %s", err, string(output))
+		return "", fmt.Errorf("%v\n%s", string(output), err)
 	}
-	return fmt.Sprintf("nginx is testing successfully: %v", string(output)), nil
+	return fmt.Sprintf("nginx test successful: %v", string(output)), nil
 }
 
 // CreateAndEnableRevProxy combine 3 functions (AddSite, EnableSite, AddUpstream) from the reverseproxy package to automate the new creation and enable of the Nginx configuration file
@@ -130,7 +92,7 @@ func CreateAndEnableRevProxy(defaults *Defaults, domain string, listenPort int, 
 		if err != nil {
 			return "", fmt.Errorf("the reverse proxy site was not enabled due to: %v", err)
 		}
-		_, err = nginx.AddUpstream(defaults.SitesAvailable, domain, upstreamName, serverIP, portNum)
+		_, err = reverseproxy.AddUpstream(defaults.SitesAvailable, domain, upstreamName, serverIP, portNum)
 		if err != nil {
 			return "", fmt.Errorf("the reverse proxy site was not enabled due to: %v", err)
 		}
@@ -186,20 +148,63 @@ func BackupConfig(defaults *Defaults, domain string) (string, error) {
 	return fmt.Sprintf("backup is created successfully at: %s", backupPath), nil
 }
 
+// BackupGlobalConfig creates a backup configuration file from global configuration (nginx.conf)
+func BackupGlobalConfig(defaults *Defaults) (string, error) {
+	srcFile, err := os.Open(defaults.NginxConf + "nginx.conf")
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %v", err)
+	}
+	defer srcFile.Close()
+
+	backupPath := filepath.Join(defaults.NginxConf, "nginx.conf.bak")
+
+	dstFile, err := os.Create(backupPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create backup file: %v", err)
+	}
+	defer dstFile.Close()
+
+	if _, err := io.Copy(dstFile, srcFile); err != nil {
+		return "", fmt.Errorf("failed to copy data: %v", err)
+	}
+
+	if err := dstFile.Sync(); err != nil {
+		return "", fmt.Errorf("failed to sync backup file: %v", err)
+	}
+
+	return fmt.Sprintf("backup is created successfully at: %s", backupPath), nil
+}
+
 // RollBackChanges revert to the backup configuration file and removes the old one
 // RollBackChanges is used if anything went wrong when modifying the existing configuration file, with condition to have an existing backup file created by BackupConfig function
 func RollBackChanges(defaults *Defaults, domain string) (string, error) {
 	dir := filepath.Dir(defaults.SitesAvailable)
 	base := filepath.Base(domain + ".conf")
-	backupFile := filepath.Join(dir, base+".bak")
+	backupFile := filepath.Join(dir, base + ".bak")
 	oldFile := filepath.Join(dir, base)
 
 	if _, err := os.Stat(backupFile); err != nil {
 		return "", fmt.Errorf("backup file %s not found", backupFile)
 	}
-	if err := os.Remove(oldFile); err != nil {
-		return "", fmt.Errorf("failed to remove the modified configuration file: %v", err)
+	os.Remove(oldFile)
+	if err := os.Rename(backupFile, oldFile); err != nil {
+		return "", fmt.Errorf("could not restore the backup configuration: %v", err)
 	}
+
+	return fmt.Sprintf("rollback is successful at: %v", oldFile), nil
+}
+
+// RollBackGlobalChanges revert to the global backup configuration (nginx.conf) file and removes the old one
+func RollBackGlobalChanges(defaults *Defaults) (string, error) {
+	dir := filepath.Dir(defaults.NginxConf)
+	base := filepath.Base("nginx.conf")
+	backupFile := filepath.Join(dir, base + ".bak")
+	oldFile := filepath.Join(dir, base)
+
+	if _, err := os.Stat(backupFile); err != nil {
+		return "", fmt.Errorf("backup file %s not found", backupFile)
+	}
+	os.Remove(oldFile)
 	if err := os.Rename(backupFile, oldFile); err != nil {
 		return "", fmt.Errorf("could not restore the backup configuration: %v", err)
 	}
@@ -208,6 +213,7 @@ func RollBackChanges(defaults *Defaults, domain string) (string, error) {
 }
 
 // UpdateSite update the existing configuration file
+// UpdateSite automatically backup the updated file, and if something went wrong it rollback automatically
 func UpdateSite(defaults *Defaults, domain string, oldText string, newText string) (string, error) {
 	_, err := BackupConfig(defaults, domain)
 	if err != nil {

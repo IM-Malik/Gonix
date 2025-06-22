@@ -9,39 +9,41 @@ import (
 )
 
 // AddSite adds a complete web server site, no need for extra function calling.
-func AddSite(directoryPath string, domain string, listenPort int, uri string, staticContentPath string, staticContentFileName string) (string, error) {
-	file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_RDWR|os.O_CREATE, 0644)
+func AddSite(availableDirectoryPath string, domain string, listenPort int, uri string, staticContentPath string, staticContentFileName string) (string, error) {
+	file, err := os.OpenFile(availableDirectoryPath + domain + ".conf", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-        RemoveSite(directoryPath, domain)
+        RemoveSite(availableDirectoryPath, domain)
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
 	}
 	defer file.Close()
 
-    output, err := AddServer(directoryPath, domain,  listenPort)
+    output, err := AddServer(availableDirectoryPath, domain,  listenPort, staticContentPath, staticContentFileName)
     if err != nil {
-        RemoveSite(directoryPath, domain)
+        RemoveSite(availableDirectoryPath, domain)
         return "", fmt.Errorf("failed to add a site: %v", err)
     }
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 
 // RemoveSite removes any existing site with the specefied domain name
-func RemoveSite(directoryPath string, domain string) (string, error) {
-    return nginx.RemoveSite(directoryPath, domain)
+func RemoveSite(availableDirectoryPath string, domain string) (string, error) {
+    return nginx.RemoveSite(availableDirectoryPath, domain)
 }
 
 // AddServer adds a server and location blocks to existing site with the specefied domain name
-func AddServer(directoryPath string, domain string, listenPort int) (string, error) {
-    file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
+func AddServer(availableDirectoryPath string, domain string, listenPort int, staticContentPath string, staticContentFileName string) (string, error) {
+    file, err := os.OpenFile(availableDirectoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
     if err != nil {
         return "", fmt.Errorf("failed to open config file: %v", err)
     }
     defer file.Close()
     
     cfgVars := nginx.NewWebConfig()
-    cfgVars.ConfigPath = directoryPath
+    cfgVars.ConfigPath = availableDirectoryPath
     cfgVars.Domain = domain
     cfgVars.ListenPort = listenPort
+    cfgVars.StaticContentPath = staticContentPath
+    cfgVars.StaticContentFileName = staticContentFileName
 
     status, err := validateConfigServer(cfgVars)
     if status {
@@ -54,7 +56,7 @@ func AddServer(directoryPath string, domain string, listenPort int) (string, err
             return "", fmt.Errorf("location template execution failed: %w", err)
         }
         file.WriteString("}\n")
-        return fmt.Sprintf("creating web server config file is successful: %v", directoryPath + domain + ".conf"), nil
+        return fmt.Sprintf("creating web server config file is successful: %v", availableDirectoryPath + domain + ".conf"), nil
     }
     return "", fmt.Errorf("web server configuration validation failed: %v", err)
 }

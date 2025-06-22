@@ -7,7 +7,7 @@ import (
     "github.com/IM-Malik/Gonix/orch"
 )
 
-// EnableModule enables the installed modules for Nginx
+// EnableModule enables the installed modules for Nginx. (sourceDirectoryPath usually is    )
 func EnableModule(defaults *orch.Defaults, sourceDirectoryPath string, moduleName string) (string, error) {
     err := os.Symlink(sourceDirectoryPath + moduleName[3:], defaults.ModulesEnabled + moduleName)
     if err != nil {

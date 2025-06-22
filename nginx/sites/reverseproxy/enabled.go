@@ -6,8 +6,8 @@ import (
 )
 
 // EnableSite enables the specific available site by domain name
-func EnableSite(sourceDirectoryPath string, destDirectoryPath string, domain string) (string, error) {
-	return nginx.EnableSite(sourceDirectoryPath, destDirectoryPath, domain)
+func EnableSite(availableDirectoryPath string, enabledDirectoryPath string, domain string) (string, error) {
+	return nginx.EnableSite(availableDirectoryPath, enabledDirectoryPath, domain)
 }
 
 // RemoveEnabledSite removes the enabled site, without removing the available site

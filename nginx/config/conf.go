@@ -2,27 +2,25 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"github.com/IM-Malik/Gonix/orch"
 	"os"
-    "fmt"
-    "text/template"
-    "github.com/IM-Malik/Gonix/orch"
+	"text/template"
 )
 
 // Stream holds information to be inserted in the stream block template [DEFAULT_STREAM_BLOCK_TMPL]
 type Stream struct {
-	Domain				string
-	ServerIP				string
-	PortNumber				int
+	Domain     string
+	ServerIP   string
+	PortNumber int
 }
 
 // NewStream creates a new instance of the [Stream] struct
 func NewStream() *Stream {
-	return &Stream{
-	}
+	return &Stream{}
 }
 
-// DEFAULT_GLOBAL_CONFIGURATION_TMPL holds the immutable value of the default global configuration of nginx.conf 
+// DEFAULT_GLOBAL_CONFIGURATION_TMPL holds the immutable value of the default global configuration of nginx.conf
 const DEFAULT_GLOBAL_CONFIGURATION = `user  www-data;
 worker_processes  auto;
 pid        /run/nginx.pid;
@@ -81,6 +79,7 @@ const DEFAULT_EMAIL_BLOCK = `mail {
       }
 }
 `
+
 // DEFAULT_STREAM_BLOCK_TMPL holds the immutable dynamic template of the default stream block of nginx.conf
 const DEFAULT_STREAM_BLOCK_TMPL = `
 stream {
@@ -97,50 +96,46 @@ stream {
     }
 }
 `
+
 // GenerateDefaultGlobalConfig generate a default nginx.conf configuration based on the template
-func GenerateDefaultGlobalConfig(defaults *orch.Defaults) (error) {
-    
-	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+func GenerateDefaultGlobalConfig(defaults *orch.Defaults) (string, error) {
+	file, err := os.OpenFile(defaults.NginxConf+"nginx.conf", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open the nginx.conf file: %v", err)
+		return "", fmt.Errorf("failed to open the nginx.conf file: %v", err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(DEFAULT_GLOBAL_CONFIGURATION)
 	if err != nil {
-		return fmt.Errorf("failed to write in the nginx.conf file: %v", err)
-	} else {
-		log.Printf("the default configuration is written correctly in nginx.conf file\n")
-		return nil
+		return "", fmt.Errorf("failed to write in the nginx.conf file: %v", err)
 	}
+
+	return "the default configuration is written correctly in nginx.conf file\n", nil
 }
 
 // GenerateDefaultEmailConfig generates a default mail block with mail servers using pop3 and imap based on the template (works but the template is not finalized)
-func GenerateDefaultEmailConfig(defaults *orch.Defaults) error {
-
-	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+func GenerateDefaultEmailConfig(defaults *orch.Defaults) (string, error) {
+	file, err := os.OpenFile(defaults.NginxConf+"nginx.conf", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open the nginx.conf file: %v", err)
+		return "", fmt.Errorf("failed to open the nginx.conf file: %v", err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(DEFAULT_EMAIL_BLOCK)
 	if err != nil {
-		return fmt.Errorf("failed to write in the nginx.conf file: %v", err)
-	} else {
-		fmt.Printf("the email default configuration is written correctly in nginx.conf file\n")
-		return nil
-	}
+		return "", fmt.Errorf("failed to write in the nginx.conf file: %v", err)
+    }
+	return "the email default configuration is written correctly in nginx.conf file\n", nil
 }
 
-// GenerateDefaultStreamConfig generates a default stream block 
-func GenerateDefaultStreamConfig(defaults *orch.Defaults, domain string, upstreamServerIP string,  upstreamPortNumber int) (string, error) {
+// GenerateDefaultStreamConfig generates a default stream block
+func GenerateDefaultStreamConfig(defaults *orch.Defaults, domain string, upstreamServerIP string, upstreamPortNumber int) (string, error) {
 	file, err := os.OpenFile(defaults.NginxConf + "nginx.conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to open the nginx.conf file: %v", err)
 	}
 	defer file.Close()
-	
+
 	stream := NewStream()
 	stream.Domain = domain
 	stream.ServerIP = upstreamServerIP

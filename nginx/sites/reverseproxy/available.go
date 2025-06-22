@@ -9,36 +9,36 @@ import (
 )
 
 // AddSite adds a complete reverse proxy site, no need for extra function calling.
-func AddSite(directoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string, httpOrhttps string) (string, error) {
-	file, err := os.OpenFile(directoryPath + domain + ".conf", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+func AddSite(availableDirectoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string, httpOrhttps string) (string, error) {
+	file, err := os.OpenFile(availableDirectoryPath + domain + ".conf", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		RemoveSite(directoryPath, domain)
+		RemoveSite(availableDirectoryPath, domain)
 		return "", fmt.Errorf("failed to create configuration file: %v", err)
 	}
 	defer file.Close()
 
-	output, err := AddServer(directoryPath, domain, listenPort, proxyPass, uri, enableSSL, certPath, keyPath, httpOrhttps)
+	output, err := AddServer(availableDirectoryPath, domain, listenPort, proxyPass, uri, enableSSL, certPath, keyPath, httpOrhttps)
 	if err != nil {
-		RemoveSite(directoryPath, domain)
+		RemoveSite(availableDirectoryPath, domain)
 		return "", fmt.Errorf("failed to add a site: %v", err)
 	}
 	return fmt.Sprintf("adding a site is successful: \n%v", output), nil
 }
 
 // RemoveSite removes any existing site with the specefied domain name
-func RemoveSite(directoryPath, domain string) (string, error) {
-	return nginx.RemoveSite(directoryPath, domain)
+func RemoveSite(availableDirectoryPath, domain string) (string, error) {
+	return nginx.RemoveSite(availableDirectoryPath, domain)
 }
 
 // AddServer adds a server and location blocks to existing site with the specefied domain name
-func AddServer(directoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string, httpOrhttps string) (string, error) {
-	file, err := os.OpenFile(directoryPath+domain+".conf", os.O_APPEND|os.O_WRONLY, 0644)
+func AddServer(availableDirectoryPath string, domain string, listenPort int, proxyPass string, uri string, enableSSL bool, certPath string, keyPath string, httpOrhttps string) (string, error) {
+	file, err := os.OpenFile(availableDirectoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to open config file: %v", err)
 	}
 	defer file.Close()
 	cfgVars := nginx.NewRevConfig()
-	cfgVars.ConfigPath = directoryPath
+	cfgVars.ConfigPath = availableDirectoryPath
 	cfgVars.Domain = domain
 	cfgVars.ListenPort = listenPort
 	cfgVars.ProxyPass = proxyPass
@@ -59,7 +59,7 @@ func AddServer(directoryPath string, domain string, listenPort int, proxyPass st
 		    return "", fmt.Errorf("location template execution failed: %w", err)
 		}
 		file.WriteString("}\n")
-		return fmt.Sprintf("creating config file is successful: %v", directoryPath + domain + ".conf"), nil
+		return fmt.Sprintf("creating config file is successful: %v", availableDirectoryPath + domain + ".conf"), nil
 	}
 	return "", fmt.Errorf("reverse proxy configuration validation failed: %v", err)
 }
@@ -71,6 +71,48 @@ func GetAvailableSites(availableDirectoryPath string) ([]os.DirEntry, error) {
 		return nil, err
 	}
 	return sites, nil
+}
+
+// AddUpstream adds an upstream block to the available sites
+func AddUpstream(availableDirectoryPath string, domain string, upstreamName string, serverIP string, portNumber int) (string, error) {
+    file, err := os.OpenFile(availableDirectoryPath + domain + ".conf", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open config file: %v", err)
+	}
+	defer file.Close()
+
+    cfgVars := nginx.NewUpstream()
+    cfgVars.ConfigPath = availableDirectoryPath
+    cfgVars.Name = upstreamName
+    cfgVars.ServerIP = serverIP
+    cfgVars.PortNumber = portNumber
+
+    status, err := validateConfigUpstream(cfgVars)
+    if status {
+        tmpl := template.Must(template.New("upstreamBlkTmpl").Parse(nginx.UPSTREAM_BLOCK_TMPL))
+        if err := tmpl.Execute(file, cfgVars); err != nil {
+            return "", fmt.Errorf("upstream template execution failed: %w", err)
+        }
+        return fmt.Sprintf("upstream block is added succesfully in: %v", availableDirectoryPath + domain + ".conf"), nil
+    }
+    return "", fmt.Errorf("configuration validation failed: %v", err)
+}
+
+// validateConfigUpstream checks for all the available information for upstream and returns correct error message when missing
+func validateConfigUpstream(cfg *nginx.Upstream) (bool, error) {
+    if cfg.ConfigPath == "" {
+        return false, fmt.Errorf("config file path is not set")
+    }
+    if cfg.Name == ""{
+        return false, fmt.Errorf("must specify an upstream name")
+    }
+    if cfg.ServerIP == "" {
+        return false, fmt.Errorf("must specify a server IP")
+    }
+    if cfg.PortNumber == 0 {
+        return false, fmt.Errorf("port number needs to be between 1-65535")
+    }
+    return true, nil
 }
 
 // validateConfigServer checks for all the available information for reverse proxy and returns correct error message when missing
